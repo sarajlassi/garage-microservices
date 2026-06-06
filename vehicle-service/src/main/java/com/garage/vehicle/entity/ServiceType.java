@@ -1,0 +1,17 @@
+package com.garage.vehicle.entity;
+
+public enum ServiceType {
+    OIL_CHANGE,
+    TIRE_ROTATION,
+    BRAKE_SERVICE,
+    ENGINE_REPAIR,
+    TRANSMISSION_SERVICE,
+    AIR_FILTER_REPLACEMENT,
+    BATTERY_REPLACEMENT,
+    COOLANT_FLUSH,
+    WHEEL_ALIGNMENT,
+    INSPECTION,
+    GENERAL_MAINTENANCE,
+    BODYWORK,
+    OTHER
+}
