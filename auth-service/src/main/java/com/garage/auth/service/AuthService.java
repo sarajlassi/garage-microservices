@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 @Slf4j
 @Service
@@ -59,7 +61,11 @@ public class AuthService {
         User savedUser = userRepository.save(user);
         log.info("New user registered: {}", savedUser.getUsername());
 
-        String accessToken = jwtService.generateToken(savedUser);
+        // Add userId and role to token claims
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", savedUser.getId());
+        claims.put("role", savedUser.getRole().name());
+        String accessToken = jwtService.generateToken(claims, savedUser);
         String refreshToken = jwtService.generateRefreshToken(savedUser);
 
         saveUserToken(savedUser, accessToken);
@@ -87,7 +93,11 @@ public class AuthService {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        String accessToken = jwtService.generateToken(user);
+        // Add userId and role to token claims
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("role", user.getRole().name());
+        String accessToken = jwtService.generateToken(claims, user);
         String refreshToken = jwtService.generateRefreshToken(user);
 
         revokeAllUserTokens(user);

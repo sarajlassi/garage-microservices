@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,7 @@ public class ProductService {
                 .category(dto.getCategory())
                 .supplier(dto.getSupplier())
                 .sku(dto.getSku())
+                .createdAt(LocalDateTime.now())
                 .active(true)
                 .build();
         
@@ -68,7 +70,8 @@ public class ProductService {
         if (dto.getCategory() != null) product.setCategory(dto.getCategory());
         if (dto.getSupplier() != null) product.setSupplier(dto.getSupplier());
         if (dto.getActive() != null) product.setActive(dto.getActive());
-        
+
+        product.setUpdatedAt(LocalDateTime.now());
         Product updated = productRepository.save(product);
         return mapToDto(updated);
     }
