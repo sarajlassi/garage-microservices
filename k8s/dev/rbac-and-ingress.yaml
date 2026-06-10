@@ -1,0 +1,165 @@
+# =========================================
+# Service Account
+# =========================================
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: garage-service-account
+  namespace: garage-dev
+---
+# =========================================
+# Role for microservices
+# =========================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: garage-role
+  namespace: garage-dev
+rules:
+- apiGroups: [""]
+  resources: ["configmaps", "secrets"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list"]
+---
+# =========================================
+# RoleBinding
+# =========================================
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: garage-rolebinding
+  namespace: garage-dev
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: garage-role
+subjects:
+- kind: ServiceAccount
+  name: garage-service-account
+  namespace: garage-dev
+---
+# =========================================
+# NetworkPolicy
+# =========================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: garage-network-policy
+  namespace: garage-dev
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: garage-dev
+    - podSelector: {}
+  egress:
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          name: garage-dev
+    - podSelector: {}
+  - to:
+    - namespaceSelector: {}
+    ports:
+    - protocol: TCP
+      port: 53
+    - protocol: UDP
+      port: 53
+---
+# =========================================
+# Ingress
+# =========================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: garage-ingress
+  namespace: garage-dev
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/rate-limit: "100"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: garage-dev.example.com
+    http:
+      paths:
+      - path: /api/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: auth-service
+            port:
+              number: 8081
+      - path: /api/vehicles
+        pathType: Prefix
+        backend:
+          service:
+            name: vehicle-service
+            port:
+              number: 8082
+      - path: /api/stock
+        pathType: Prefix
+        backend:
+          service:
+            name: stock-service
+            port:
+              number: 8083
+      - path: /kafka-ui
+        pathType: Prefix
+        backend:
+          service:
+            name: kafka-ui
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - garage-dev.example.com
+    secretName: garage-tls
+---
+# =========================================
+# PodDisruptionBudget
+# =========================================
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: auth-service-pdb
+  namespace: garage-dev
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: auth-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: vehicle-service-pdb
+  namespace: garage-dev
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: vehicle-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: stock-service-pdb
+  namespace: garage-dev
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: stock-service
+

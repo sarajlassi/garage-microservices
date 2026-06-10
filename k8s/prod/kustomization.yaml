@@ -1,0 +1,85 @@
+# =========================================
+# Production environment setup
+# =========================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: garage-prod
+
+resources:
+- ../dev/auth-service.yaml
+- ../dev/microservices.yaml
+- ../dev/infrastructure.yaml
+- ../dev/kafka.yaml
+- ../dev/rbac-and-ingress.yaml
+
+commonLabels:
+  environment: prod
+  managed-by: kustomize
+
+commonAnnotations:
+  description: "PRODUCTION environment for Garage Microservices"
+  version: "1.0.0"
+
+replicas:
+- name: auth-service
+  count: 3
+- name: vehicle-service
+  count: 3
+- name: stock-service
+  count: 3
+
+# Patch replicas and resources for production
+patches:
+- target:
+    kind: HorizontalPodAutoscaler
+    name: auth-service-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 3
+    - op: replace
+      path: /spec/maxReplicas
+      value: 10
+
+- target:
+    kind: HorizontalPodAutoscaler
+    name: vehicle-service-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 3
+    - op: replace
+      path: /spec/maxReplicas
+      value: 10
+
+- target:
+    kind: HorizontalPodAutoscaler
+    name: stock-service-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 3
+    - op: replace
+      path: /spec/maxReplicas
+      value: 10
+
+- target:
+    kind: Deployment
+  patch: |-
+    - op: replace
+      path: /spec/strategy
+      value:
+        type: RollingUpdate
+        rollingUpdate:
+          maxSurge: 1
+          maxUnavailable: 0
+
+images:
+- name: docker.io/sjlassi/garage-microservices-auth
+  newTag: 1.0.0
+- name: docker.io/sjlassi/garage-microservices-vehicle
+  newTag: 1.0.0
+- name: docker.io/sjlassi/garage-microservices-stock
+  newTag: 1.0.0
+

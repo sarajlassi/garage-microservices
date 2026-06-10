@@ -1,0 +1,15 @@
+apiVersion: namespace
+kind: Namespace
+metadata:
+  name: garage-dev
+---
+apiVersion: namespace
+kind: Namespace
+metadata:
+  name: garage-staging
+---
+apiVersion: namespace
+kind: Namespace
+metadata:
+  name: garage-prod
+

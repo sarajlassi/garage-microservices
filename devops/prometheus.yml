@@ -1,0 +1,94 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    monitor: 'garage-microservices'
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+rule_files:
+  - '/etc/prometheus/alerts/*.yml'
+
+scrape_configs:
+  # ========================================
+  # Prometheus self-monitoring
+  # ========================================
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # ========================================
+  # Docker containers
+  # ========================================
+  - job_name: 'docker'
+    static_configs:
+      - targets: ['localhost:9323']
+
+  # ========================================
+  # Auth Service
+  # ========================================
+  - job_name: 'auth-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['auth-service:8081']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'auth-service'
+
+  # ========================================
+  # Vehicle Service
+  # ========================================
+  - job_name: 'vehicle-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['vehicle-service:8082']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'vehicle-service'
+
+  # ========================================
+  # Stock Service
+  # ========================================
+  - job_name: 'stock-service'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['stock-service:8083']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'stock-service'
+
+  # ========================================
+  # PostgreSQL
+  # ========================================
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # ========================================
+  # Kafka
+  # ========================================
+  - job_name: 'kafka'
+    static_configs:
+      - targets: ['kafka:9092']
+
+  # ========================================
+  # Node Exporter (Linux hosts)
+  # ========================================
+  - job_name: 'node'
+    static_configs:
+      - targets: ['node-exporter:9100']
+
+  # ========================================
+  # cAdvisor (Docker containers metrics)
+  # ========================================
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+

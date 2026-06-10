@@ -1,0 +1,40 @@
+# =========================================
+# Kustomization file for DEV environment
+# =========================================
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: garage-dev
+
+resources:
+- auth-service.yaml
+- microservices.yaml
+- infrastructure.yaml
+- kafka.yaml
+- rbac-and-ingress.yaml
+
+commonLabels:
+  environment: dev
+  managed-by: kustomize
+
+commonAnnotations:
+  description: "DEV environment for Garage Microservices"
+  version: "1.0.0"
+
+replicas:
+- name: auth-service
+  count: 1
+- name: vehicle-service
+  count: 1
+- name: stock-service
+  count: 1
+
+# Image configuration
+images:
+- name: docker.io/sjlassi/garage-microservices-auth
+  newTag: latest
+- name: docker.io/sjlassi/garage-microservices-vehicle
+  newTag: latest
+- name: docker.io/sjlassi/garage-microservices-stock
+  newTag: latest
+

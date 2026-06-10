@@ -1,0 +1,209 @@
+version: '3.9'
+
+services:
+  # =======================================
+  # Jenkins
+  # =======================================
+  jenkins:
+    image: jenkins/jenkins:lts-alpine
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    environment:
+      JENKINS_OPTS: ""
+      CASC_JENKINS_CONFIG: /var/jenkins_home/casc.yaml
+    volumes:
+      - jenkins-data:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PWD}/jenkins-casc.yaml:/var/jenkins_home/casc.yaml:ro
+    networks:
+      - garage-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/login"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =======================================
+  # SonarQube
+  # =======================================
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://postgres-sonar:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube-data:/opt/sonarqube/data
+      - sonarqube-extensions:/opt/sonarqube/extensions
+    depends_on:
+      - postgres-sonar
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # SonarQube Database
+  # =======================================
+  postgres-sonar:
+    image: postgres:17-alpine
+    container_name: postgres-sonar
+    environment:
+      POSTGRES_DB: sonarqube
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: sonar
+    volumes:
+      - postgres-sonar-data:/var/lib/postgresql/data
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # Nexus (Artifact Repository)
+  # =======================================
+  nexus:
+    image: sonatype/nexus3:latest
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    environment:
+      NEXUS_CONTEXT: "/"
+    volumes:
+      - nexus-data:/nexus-data
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # GitLab (Optional)
+  # =======================================
+  gitlab:
+    image: gitlab/gitlab-ce:latest
+    container_name: gitlab
+    ports:
+      - "8000:80"
+      - "8443:443"
+      - "2222:22"
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://localhost:8000'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+    volumes:
+      - gitlab-config:/etc/gitlab
+      - gitlab-logs:/var/log/gitlab
+      - gitlab-data:/var/opt/gitlab
+    networks:
+      - garage-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/help"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # =======================================
+  # Portainer (Docker Management)
+  # =======================================
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "9001:9000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer-data:/data
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # Docker Registry
+  # =======================================
+  registry:
+    image: registry:2
+    container_name: registry
+    ports:
+      - "5000:5000"
+    volumes:
+      - registry-data:/var/lib/registry
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # Registry UI
+  # =======================================
+  registry-ui:
+    image: joxit/docker-registry-ui:latest
+    container_name: registry-ui
+    ports:
+      - "5001:80"
+    environment:
+      REGISTRY_TITLE: "Private Registry"
+      REGISTRY_URL: http://registry:5000
+    depends_on:
+      - registry
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # Prometheus (Monitoring)
+  # =======================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ${PWD}/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+  # =======================================
+  # Grafana (Visualization)
+  # =======================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - garage-network
+    restart: unless-stopped
+
+volumes:
+  jenkins-data:
+  sonarqube-data:
+  sonarqube-extensions:
+  postgres-sonar-data:
+  nexus-data:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:
+  portainer-data:
+  registry-data:
+  prometheus-data:
+  grafana-data:
+
+networks:
+  garage-network:
+    driver: bridge
+

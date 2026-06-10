@@ -1,0 +1,105 @@
+jenkins:
+  securityRealm:
+    local:
+      allowsSignup: false
+  authorizationStrategy:
+    roleBased:
+      roles:
+        global:
+          - name: "admin"
+            permissions:
+              - "Overall/Administer"
+          - name: "developer"
+            permissions:
+              - "Job/Build"
+              - "Job/Cancel"
+              - "Job/Read"
+          - name: "viewer"
+            permissions:
+              - "Job/Read"
+
+unclassified:
+  location:
+    url: "http://localhost:8080/"
+  
+  sonarGlobalConfiguration:
+    installations:
+      - name: "SonarQube"
+        serverUrl: "http://sonarqube:9000"
+        credentialsId: "sonar-token"
+        monoVersionBehavior: false
+
+  # Email configuration
+  mailer:
+    smtpHost: "smtp.gmail.com"
+    smtpPort: 587
+    useSsl: false
+    useTls: true
+    smtpAuthUsername: "${SMTP_USER}"
+    smtpAuthPassword: "${SMTP_PASSWORD}"
+    replyToAddress: "noreply@garage.local"
+
+# Credentials
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          - implementation: org.jenkinsci.plugins.plaincredentials.impl.StringCredentialsImpl
+            scope: GLOBAL
+            id: "sonar-token"
+            secret: "${SONAR_TOKEN}"
+            description: "SonarQube Token"
+          
+          - implementation: com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl
+            scope: GLOBAL
+            id: "docker-credentials"
+            username: "${DOCKER_USERNAME}"
+            password: "${DOCKER_PASSWORD}"
+            description: "Docker Registry Credentials"
+          
+          - implementation: com.cloudbees.jenkins.plugins.kubernetes.credentials.impl.UsernamePasswordCredentialsImpl
+            scope: GLOBAL
+            id: "k8s-credentials"
+            username: "${KUBE_USER}"
+            password: "${KUBE_PASS}"
+            description: "Kubernetes Credentials"
+
+# Tool installations
+tool:
+  git:
+    installations:
+      - name: "Default"
+        home: "git"
+  maven:
+    installations:
+      - name: "Maven 3.9.0"
+        properties:
+          - installSource:
+              installers:
+                - maven:
+                    id: "3.9.0"
+  jdk:
+    installations:
+      - name: "JDK 17"
+        properties:
+          - installSource:
+              installers:
+                - openjdk:
+                    id: "jdk-17.0.1+12"
+
+# Job configuration
+jobs:
+  - script: >
+      pipelineJob('garage-microservices-pipeline') {
+        description('CI/CD Pipeline for Garage Microservices')
+        definition {
+          cps {
+            script(readFileAsString('/var/jenkins_home/Jenkinsfile'))
+            sandbox(true)
+          }
+        }
+        triggers {
+          gitHub()
+        }
+      }
+

@@ -18,7 +18,7 @@ services:
     networks:
       - garage-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d auth_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d authDB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,7 +30,7 @@ services:
     image: postgres:15-alpine
     container_name: vehicle-postgres
     environment:
-      POSTGRES_DB: vehicle_db
+      POSTGRES_DB: vehicleDB
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
@@ -40,7 +40,7 @@ services:
     networks:
       - garage-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d vehicle_db"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d vehicleDB"]
       interval: 10s
       timeout: 5s
       retries: 5
