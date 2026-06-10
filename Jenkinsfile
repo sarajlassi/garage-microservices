@@ -22,6 +22,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -30,7 +31,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests -Dorg.slf4j.simpleLogger.defaultLogLevel=warn'
+                sh 'mvn clean package -DskipTests'
             }
         }
 
@@ -47,10 +48,10 @@ pipeline {
             }
             steps {
                 sh """
-                    mvn sonar:sonar \\
-                        -Dsonar.projectKey=garage-microservices \\
-                        -Dsonar.host.url=http://sonarqube:9000 \\
-                        -Dsonar.login=\${SONAR_TOKEN}
+                    mvn sonar:sonar \
+                        -Dsonar.projectKey=garage-microservices \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.login=${SONAR_TOKEN}
                 """
             }
         }
@@ -62,14 +63,15 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
-                    sh "echo \$DOCKER_PASS | docker login ${env.REGISTRY} -u \$DOCKER_USER --password-stdin"
+
                     sh """
-                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} \\
-                            -f auth-service/Dockerfile auth-service/
-                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} \\
-                            -f vehicle-service/Dockerfile vehicle-service/
-                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} \\
-                            -f stock-service/Dockerfile stock-service/
+                        echo \$DOCKER_PASS | docker login ${env.REGISTRY} -u \$DOCKER_USER --password-stdin
+                    """
+
+                    sh """
+                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} -f auth-service/Dockerfile auth-service/
+                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} -f vehicle-service/Dockerfile vehicle-service/
+                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} -f stock-service/Dockerfile stock-service/
 
                         docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG}
                         docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG}
@@ -84,35 +86,34 @@ pipeline {
         stage('Security Scan') {
             steps {
                 sh """
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \\
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
                         ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} || true
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \\
-                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} || true
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \\
-                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} || true
                 """
             }
         }
 
-        stage('Deploy to Dev') {
+        stage('Deploy') {
             when {
-                expression { params.ENVIRONMENT == 'dev' }
+                expression { params.ENVIRONMENT == 'dev' || params.ENVIRONMENT == 'prod' }
             }
             steps {
-                sh """
-                    kubectl apply -f k8s/namespaces.yaml
-                    kubectl apply -k k8s/dev/
+                script {
+                    def ns = "garage-${params.ENVIRONMENT}"
 
-                    kubectl set image deployment/auth-service \\
-                        auth-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} \\
-                        -n garage-dev
-                    kubectl set image deployment/vehicle-service \\
-                        vehicle-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} \\
-                        -n garage-dev
-                    kubectl set image deployment/stock-service \\
-                        stock-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} \\
-                        -n garage-dev
-                """
+                    sh """
+                        kubectl apply -f k8s/namespaces.yaml
+                        kubectl apply -k k8s/${params.ENVIRONMENT}/
+
+                        kubectl set image deployment/auth-service \
+                            auth-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} -n ${ns}
+
+                        kubectl set image deployment/vehicle-service \
+                            vehicle-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} -n ${ns}
+
+                        kubectl set image deployment/stock-service \
+                            stock-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} -n ${ns}
+                    """
+                }
             }
         }
 
@@ -122,30 +123,8 @@ pipeline {
             }
             steps {
                 timeout(time: 10, unit: 'MINUTES') {
-                    input message: "Deploy [${params.IMAGE_TAG}] to PRODUCTION?", ok: 'Deploy'
+                    input message: "Deploy ${params.IMAGE_TAG} to PRODUCTION?", ok: 'Deploy'
                 }
-            }
-        }
-
-        stage('Deploy to Prod') {
-            when {
-                expression { params.ENVIRONMENT == 'prod' }
-            }
-            steps {
-                sh """
-                    kubectl apply -f k8s/namespaces.yaml
-                    kubectl apply -k k8s/prod/
-
-                    kubectl set image deployment/auth-service \\
-                        auth-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} \\
-                        -n garage-prod
-                    kubectl set image deployment/vehicle-service \\
-                        vehicle-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} \\
-                        -n garage-prod
-                    kubectl set image deployment/stock-service \\
-                        stock-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} \\
-                        -n garage-prod
-                """
             }
         }
 
@@ -153,10 +132,11 @@ pipeline {
             steps {
                 script {
                     def ns = "garage-${params.ENVIRONMENT}"
+
                     sh """
-                        kubectl rollout status deployment/auth-service    -n ${ns} --timeout=5m
+                        kubectl rollout status deployment/auth-service -n ${ns} --timeout=5m
                         kubectl rollout status deployment/vehicle-service -n ${ns} --timeout=5m
-                        kubectl rollout status deployment/stock-service   -n ${ns} --timeout=5m
+                        kubectl rollout status deployment/stock-service -n ${ns} --timeout=5m
                     """
                 }
             }
@@ -168,10 +148,10 @@ pipeline {
             sh 'docker image prune -f || true'
         }
         success {
-            echo "Pipeline succeeded — ${params.ENVIRONMENT} is live at tag ${params.IMAGE_TAG}"
+            echo "Pipeline succeeded — ${params.ENVIRONMENT} deployed with tag ${params.IMAGE_TAG}"
         }
         failure {
-            echo "Pipeline failed for ${params.ENVIRONMENT} — check the logs above"
+            echo "Pipeline failed — check logs"
         }
     }
 }
