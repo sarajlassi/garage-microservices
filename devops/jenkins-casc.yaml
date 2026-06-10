@@ -56,13 +56,14 @@ credentials:
             username: "${DOCKER_USERNAME}"
             password: "${DOCKER_PASSWORD}"
             description: "Docker Registry Credentials"
-          
-          - implementation: com.cloudbees.jenkins.plugins.kubernetes.credentials.impl.UsernamePasswordCredentialsImpl
-            scope: GLOBAL
-            id: "k8s-credentials"
-            username: "${KUBE_USER}"
-            password: "${KUBE_PASS}"
-            description: "Kubernetes Credentials"
+
+          - credentials:
+              - usernamePassword:
+                  scope: GLOBAL
+                  id: "k8s-credentials"
+                  username: "${KUBE_USER}"
+                  password: "${KUBE_PASS}"
+                  description: "Kubernetes Credentials"
 
 # Tool installations
 tool:
@@ -91,15 +92,20 @@ tool:
 jobs:
   - script: >
       pipelineJob('garage-microservices-pipeline') {
-        description('CI/CD Pipeline for Garage Microservices')
-        definition {
-          cps {
-            script(readFileAsString('/var/jenkins_home/Jenkinsfile'))
-            sandbox(true)
+          description('CI/CD Pipeline for Garage Microservices')
+
+          definition {
+              cpsScm {
+                  scm {
+                      git {
+                          remote {
+                              url('https://github.com/<your-user>/garage-microservices.git')
+                          }
+                          branch('*/main')
+                      }
+                  }
+                  scriptPath('Jenkinsfile')
+              }
           }
-        }
-        triggers {
-          gitHub()
-        }
       }
 
