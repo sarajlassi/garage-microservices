@@ -86,11 +86,18 @@ public class SupplierOrderController {
     public ResponseEntity<SupplierOrderDto> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestParam String status) {
-        
         log.info("Updating order status - Order: {}, Status: {}", orderId, status);
         SupplierOrder.OrderStatus orderStatus = SupplierOrder.OrderStatus.valueOf(status.toUpperCase());
-        SupplierOrderDto order = supplierOrderService.updateOrderStatus(orderId, orderStatus);
-        return ResponseEntity.ok(order);
+        return ResponseEntity.ok(supplierOrderService.updateOrderStatus(orderId, orderStatus));
+    }
+
+    @PatchMapping("/{orderId}/status")
+    public ResponseEntity<SupplierOrderDto> patchOrderStatus(
+            @PathVariable Long orderId,
+            @RequestParam String status) {
+        log.info("Patching order status - Order: {}, Status: {}", orderId, status);
+        SupplierOrder.OrderStatus orderStatus = SupplierOrder.OrderStatus.valueOf(status.toUpperCase());
+        return ResponseEntity.ok(supplierOrderService.updateOrderStatus(orderId, orderStatus));
     }
 
     @PutMapping("/{orderId}/receive")

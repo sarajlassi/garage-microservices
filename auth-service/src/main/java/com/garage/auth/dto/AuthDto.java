@@ -16,8 +16,6 @@ public class AuthDto {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RegisterRequest {
-        @NotBlank(message = "Username is required")
-        @Size(min = 3, max = 50)
         private String username;
 
         @NotBlank(message = "Email is required")
@@ -30,9 +28,11 @@ public class AuthDto {
 
         private String firstName;
         private String lastName;
+        private String phone;
+        private String company;
 
         @Builder.Default
-        private Role role = Role.USER;
+        private Role role = Role.MECANICIEN;
     }
 
     @Data
@@ -101,5 +101,9 @@ public class AuthDto {
         private String firstName;
         private String lastName;
         private String role;
+        private String phone;
+        private String company;
+        private boolean active;
+        private String createdAt;
     }
 }

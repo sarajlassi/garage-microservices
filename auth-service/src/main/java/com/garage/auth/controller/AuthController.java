@@ -56,4 +56,17 @@ public class AuthController {
     public ResponseEntity<List<AuthDto.UserResponse>> getAllUsers() {
         return ResponseEntity.ok(authService.getAllUsers());
     }
+
+    @PatchMapping("/users/{id}/toggle")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<AuthDto.UserResponse> toggleUser(@PathVariable Long id) {
+        return ResponseEntity.ok(authService.toggleUser(id));
+    }
+
+    @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+        authService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
 }

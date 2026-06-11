@@ -27,6 +27,7 @@ public class ProductService {
                 .unitPrice(dto.getUnitPrice())
                 .category(dto.getCategory())
                 .supplier(dto.getSupplier())
+                .supplierId(dto.getSupplierId())
                 .sku(dto.getSku())
                 .createdAt(LocalDateTime.now())
                 .active(true)
@@ -69,6 +70,7 @@ public class ProductService {
         if (dto.getUnitPrice() != null) product.setUnitPrice(dto.getUnitPrice());
         if (dto.getCategory() != null) product.setCategory(dto.getCategory());
         if (dto.getSupplier() != null) product.setSupplier(dto.getSupplier());
+        if (dto.getSupplierId() != null) product.setSupplierId(dto.getSupplierId());
         if (dto.getActive() != null) product.setActive(dto.getActive());
 
         product.setUpdatedAt(LocalDateTime.now());
@@ -90,6 +92,7 @@ public class ProductService {
                 .unitPrice(product.getUnitPrice())
                 .category(product.getCategory())
                 .supplier(product.getSupplier())
+                .supplierId(product.getSupplierId())
                 .sku(product.getSku())
                 .active(product.getActive())
                 .createdAt(product.getCreatedAt())

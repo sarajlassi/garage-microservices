@@ -36,7 +36,7 @@ public class VehicleController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<List<VehicleDto.VehicleResponse>> getAllVehicles() {
         return ResponseEntity.ok(vehicleService.getAllVehicles());
     }
@@ -49,7 +49,7 @@ public class VehicleController {
     }
 
     @GetMapping("/status/{status}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<List<VehicleDto.VehicleResponse>> getVehiclesByStatus(
             @PathVariable VehicleStatus status
     ) {
@@ -74,7 +74,7 @@ public class VehicleController {
     // Service records endpoints
 
     @PostMapping("/{vehicleId}/services")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> createServiceRecord(
             @PathVariable Long vehicleId,
             @Valid @RequestBody VehicleDto.CreateServiceRequest request
@@ -91,7 +91,7 @@ public class VehicleController {
     }
 
     @PutMapping("/{vehicleId}/services/{recordId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MECHANIC')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> updateServiceRecord(
             @PathVariable Long vehicleId,
             @PathVariable Long recordId,

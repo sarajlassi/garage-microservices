@@ -207,10 +207,58 @@ services:
       - garage-network
     restart: unless-stopped
 
+  # ─────────────────────────────────────
+  # PostgreSQL – Invoice DB
+  # ─────────────────────────────────────
+  invoice-postgres:
+    image: postgres:15-alpine
+    container_name: invoice-postgres
+    environment:
+      POSTGRES_DB: invoiceDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5435:5432"
+    volumes:
+      - invoice-postgres-data:/var/lib/postgresql/data
+    networks:
+      - garage-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d invoiceDB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────
+  # Invoice Microservice
+  # ─────────────────────────────────────
+  invoice-service:
+    build:
+      context: ./invoice-service
+      dockerfile: Dockerfile
+    container_name: invoice-service
+    depends_on:
+      invoice-postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://invoice-postgres:5432/invoiceDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+    networks:
+      - garage-network
+    restart: unless-stopped
+
 volumes:
   auth-postgres-data:
   vehicle-postgres-data:
   stock-postgres-data:
+  invoice-postgres-data:
 
 networks:
   garage-network:

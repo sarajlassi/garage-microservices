@@ -40,21 +40,26 @@ public class AuthService {
 
     @Transactional
     public AuthDto.AuthResponse register(AuthDto.RegisterRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw new IllegalArgumentException("Username already exists: " + request.getUsername());
+        String username = (request.getUsername() != null && !request.getUsername().isBlank())
+                ? request.getUsername() : request.getEmail();
+
+        if (userRepository.existsByUsername(username)) {
+            throw new IllegalArgumentException("Username already exists: " + username);
         }
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already registered: " + request.getEmail());
         }
 
-        Role role = request.getRole() != null ? request.getRole() : Role.USER;
+        Role role = request.getRole() != null ? request.getRole() : Role.MECANICIEN;
 
         User user = User.builder()
-                .username(request.getUsername())
+                .username(username)
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
+                .phone(request.getPhone())
+                .company(request.getCompany())
                 .role(role)
                 .build();
 
@@ -187,6 +192,19 @@ public class AuthService {
                 .toList();
     }
 
+    @Transactional
+    public AuthDto.UserResponse toggleUser(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + id));
+        user.setEnabled(!user.isEnabled());
+        return mapToUserResponse(userRepository.save(user));
+    }
+
+    @Transactional
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
+    }
+
     private void saveUserToken(User user, String jwtToken) {
         Token token = Token.builder()
                 .user(user)
@@ -229,6 +247,10 @@ public class AuthService {
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
                 .role(user.getRole().name())
+                .phone(user.getPhone())
+                .company(user.getCompany())
+                .active(user.isEnabled())
+                .createdAt(user.getCreatedAt() != null ? user.getCreatedAt().toString() : null)
                 .build();
     }
 }

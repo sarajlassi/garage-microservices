@@ -32,6 +32,9 @@ public class Product {
 
     private String supplier;
 
+    @Column(name = "supplier_id")
+    private Long supplierId;
+
     private String sku;
 
     @Column(nullable = false)

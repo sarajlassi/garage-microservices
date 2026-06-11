@@ -185,6 +185,32 @@ public class VehicleService {
                 .toList();
     }
 
+    public List<VehicleDto.ServiceRecordResponse> getAllServiceRecords() {
+        return serviceRecordRepository.findAll().stream()
+                .map(this::mapToServiceResponse)
+                .toList();
+    }
+
+    public VehicleDto.ServiceRecordResponse getServiceRecordById(Long id) {
+        return serviceRecordRepository.findById(id)
+                .map(this::mapToServiceResponse)
+                .orElseThrow(() -> new NoSuchElementException("Service record not found: " + id));
+    }
+
+    public List<VehicleDto.ServiceRecordResponse> getServiceRecordsByOwner(Long ownerId) {
+        return serviceRecordRepository.findByVehicleOwnerId(ownerId).stream()
+                .map(this::mapToServiceResponse)
+                .toList();
+    }
+
+    @Transactional
+    public void deleteServiceRecord(Long id) {
+        ServiceRecord record = serviceRecordRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Service record not found: " + id));
+        serviceRecordRepository.delete(record);
+        log.info("Service record {} deleted", id);
+    }
+
     @Transactional
     public VehicleDto.ServiceRecordResponse updateServiceRecord(
             Long vehicleId, Long recordId, VehicleDto.UpdateServiceRequest request) {

@@ -19,6 +19,7 @@ public class ProductDto {
     private BigDecimal unitPrice;
     private String category;
     private String supplier;
+    private Long supplierId;
     private String sku;
     private Boolean active;
     private LocalDateTime createdAt;
