@@ -14,6 +14,7 @@
         <module>auth-service</module>
         <module>vehicle-service</module>
         <module>stock-service</module>
+        <module>invoice-service</module>
     </modules>
 
     <properties>
