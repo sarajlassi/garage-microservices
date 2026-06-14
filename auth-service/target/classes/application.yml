@@ -35,6 +35,7 @@ spring:
       properties:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "VehicleCreatedEvent:com.garage.auth.kafka.KafkaEvents$VehicleCreatedEvent,ServiceScheduledEvent:com.garage.auth.kafka.KafkaEvents$ServiceScheduledEvent,InvoicePaidEvent:com.garage.auth.kafka.KafkaEvents$InvoicePaidEvent"
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
@@ -46,6 +47,9 @@ kafka:
     user-registered: user-registered
     user-login: user-login
     token-validated: token-validated
+    vehicle-created: vehicle-created
+    service-scheduled: service-scheduled
+    invoice-paid: invoice-paid
 
 management:
   endpoints:
