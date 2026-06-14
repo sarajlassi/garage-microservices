@@ -1,4 +1,4 @@
-# 🚗 Garage Microservices
+#  Garage Microservices
 
 A Spring Boot microservices project for managing a garage, consisting of:
 - **auth-service** — JWT authentication, user registration & login
@@ -432,4 +432,3 @@ Authorization: Bearer <token>
 5. **Part is insufficient** → Manager can place a supplier order
 6. **Order received** → Stock quantity updated automatically
 7. **Service completed** → Stock is deducted from inventory with history tracking
-
