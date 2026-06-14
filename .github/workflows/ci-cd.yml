@@ -100,12 +100,12 @@ jobs:
           cache: maven
       
       - name: SonarQube Scan
+        if: ${{ secrets.SONAR_TOKEN != '' && secrets.SONAR_HOST_URL != '' }}
         run: |
           mvn sonar:sonar \
             -Dsonar.projectKey=garage-microservices \
             -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
             -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-        if: always()
 
   # ========================================
   # Security Scan
