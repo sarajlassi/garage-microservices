@@ -53,6 +53,7 @@ public class Client {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+
         updatedAt = LocalDateTime.now();
         if (totalSpent == null) totalSpent = BigDecimal.ZERO;
     }
