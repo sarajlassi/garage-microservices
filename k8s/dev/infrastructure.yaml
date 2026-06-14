@@ -271,4 +271,88 @@ spec:
     targetPort: 5432
   selector:
     app: stock-postgres
+---
+# =========================================
+# Invoice PostgreSQL
+# =========================================
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: invoice-postgres-pvc
+  namespace: garage-dev
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: invoice-postgres
+  namespace: garage-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: invoice-postgres
+  template:
+    metadata:
+      labels:
+        app: invoice-postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:15-alpine
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_DB
+          value: invoiceDB
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - pg_isready -U postgres
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: invoice-postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: invoice-postgres
+  namespace: garage-dev
+spec:
+  type: ClusterIP
+  ports:
+  - port: 5432
+    targetPort: 5432
+  selector:
+    app: invoice-postgres
 

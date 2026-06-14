@@ -1,14 +1,14 @@
-apiVersion: namespace
+apiVersion: v1
 kind: Namespace
 metadata:
   name: garage-dev
 ---
-apiVersion: namespace
+apiVersion: v1
 kind: Namespace
 metadata:
   name: garage-staging
 ---
-apiVersion: namespace
+apiVersion: v1
 kind: Namespace
 metadata:
   name: garage-prod

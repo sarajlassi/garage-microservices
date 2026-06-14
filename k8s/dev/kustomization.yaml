@@ -9,6 +9,7 @@ namespace: garage-dev
 resources:
 - auth-service.yaml
 - microservices.yaml
+- invoice-service.yaml
 - infrastructure.yaml
 - kafka.yaml
 - rbac-and-ingress.yaml
@@ -28,6 +29,8 @@ replicas:
   count: 1
 - name: stock-service
   count: 1
+- name: invoice-service
+  count: 1
 
 # Image configuration
 images:
@@ -36,5 +39,7 @@ images:
 - name: docker.io/sjlassi/garage-microservices-vehicle
   newTag: latest
 - name: docker.io/sjlassi/garage-microservices-stock
+  newTag: latest
+- name: docker.io/sjlassi/garage-microservices-invoice
   newTag: latest
 

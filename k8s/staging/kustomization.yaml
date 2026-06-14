@@ -9,6 +9,7 @@ namespace: garage-staging
 resources:
 - ../dev/auth-service.yaml
 - ../dev/microservices.yaml
+- ../dev/invoice-service.yaml
 - ../dev/infrastructure.yaml
 - ../dev/kafka.yaml
 - ../dev/rbac-and-ingress.yaml
@@ -27,6 +28,8 @@ replicas:
 - name: vehicle-service
   count: 2
 - name: stock-service
+  count: 2
+- name: invoice-service
   count: 2
 
 # Patch replicas
@@ -64,11 +67,24 @@ patches:
       path: /spec/maxReplicas
       value: 5
 
+- target:
+    kind: HorizontalPodAutoscaler
+    name: invoice-service-hpa
+  patch: |-
+    - op: replace
+      path: /spec/minReplicas
+      value: 2
+    - op: replace
+      path: /spec/maxReplicas
+      value: 5
+
 images:
 - name: docker.io/sjlassi/garage-microservices-auth
   newTag: staging
 - name: docker.io/sjlassi/garage-microservices-vehicle
   newTag: staging
 - name: docker.io/sjlassi/garage-microservices-stock
+  newTag: staging
+- name: docker.io/sjlassi/garage-microservices-invoice
   newTag: staging
 

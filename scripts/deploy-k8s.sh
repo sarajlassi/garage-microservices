@@ -18,6 +18,9 @@ ENVIRONMENT=${1:-dev}
 IMAGE_TAG=${2:-latest}
 KUBECONFIG=${KUBECONFIG:-~/.kube/config}
 
+SERVICES=(auth-service vehicle-service stock-service invoice-service)
+IMAGE_PREFIX="docker.io/sjlassi/garage-microservices"
+
 # Functions
 print_header() {
     echo -e "${BLUE}========================================${NC}"
@@ -46,7 +49,7 @@ fi
 
 NAMESPACE="garage-${ENVIRONMENT}"
 
-print_header "Deploying to $ENVIRONMENT environment"
+print_header "Deploying to $ENVIRONMENT environment (tag: $IMAGE_TAG)"
 
 # Check kubectl
 if ! command -v kubectl &> /dev/null; then
@@ -56,11 +59,11 @@ fi
 
 print_success "kubectl found"
 
-# Check namespace
+# Create namespace if it doesn't exist
 if ! kubectl get namespace "$NAMESPACE" &> /dev/null; then
     print_warning "Namespace $NAMESPACE does not exist, creating..."
-    kubectl create namespace "$NAMESPACE"
-    print_success "Namespace created"
+    kubectl apply -f k8s/namespaces.yaml
+    print_success "Namespaces created"
 fi
 
 # Create secrets
@@ -76,47 +79,54 @@ kubectl create secret generic jwt-secret \
 
 print_success "Secrets created/updated"
 
-# Apply Kubernetes manifests
-print_header "Applying Kubernetes manifests"
-
-# Create directories if they don't exist
-mkdir -p "k8s/$ENVIRONMENT"
-
-# Apply all YAML files
-kubectl apply -f "k8s/$ENVIRONMENT/" -n "$NAMESPACE" || true
-
+# Apply Kubernetes manifests using kustomize
+print_header "Applying Kubernetes manifests (kustomize)"
+kubectl apply -k "k8s/$ENVIRONMENT/"
 print_success "Manifests applied"
+
+# Update image tags to the correct version
+print_header "Updating image tags to $IMAGE_TAG"
+for svc in "${SERVICES[@]}"; do
+    kubectl set image deployment/"$svc" \
+        "$svc"="${IMAGE_PREFIX}-${svc}:${IMAGE_TAG}" \
+        -n "$NAMESPACE" || print_warning "Could not update image for $svc"
+done
+print_success "Image tags updated"
 
 # Wait for deployments
 print_header "Waiting for deployments to be ready"
 
-deployments=("auth-service" "vehicle-service" "stock-service" "auth-postgres" "vehicle-postgres" "stock-postgres" "kafka" "zookeeper")
+app_deployments=("auth-service" "vehicle-service" "stock-service" "invoice-service")
+infra_deployments=("auth-postgres" "vehicle-postgres" "stock-postgres" "invoice-postgres" "kafka" "zookeeper")
 
-for deployment in "${deployments[@]}"; do
+for deployment in "${infra_deployments[@]}"; do
     echo "Waiting for $deployment..."
-    kubectl rollout status deployment/"$deployment" -n "$NAMESPACE" --timeout=5m || print_warning "Failed to wait for $deployment"
+    kubectl rollout status deployment/"$deployment" -n "$NAMESPACE" --timeout=5m \
+        || print_warning "Failed to wait for $deployment"
+done
+
+for deployment in "${app_deployments[@]}"; do
+    echo "Waiting for $deployment..."
+    kubectl rollout status deployment/"$deployment" -n "$NAMESPACE" --timeout=5m \
+        || print_warning "Failed to wait for $deployment"
 done
 
 print_success "All deployments ready"
 
 # Get service IPs
 print_header "Service Information"
-
 kubectl get services -n "$NAMESPACE" -o wide
-
-# Port forwarding info
-print_header "Port Forwarding (for local testing)"
-echo "To forward ports to your machine, use:"
-echo ""
-echo "kubectl port-forward -n $NAMESPACE svc/auth-service 8081:8081 &"
-echo "kubectl port-forward -n $NAMESPACE svc/vehicle-service 8082:8082 &"
-echo "kubectl port-forward -n $NAMESPACE svc/stock-service 8083:8083 &"
-echo "kubectl port-forward -n $NAMESPACE svc/kafka-ui 8080:8080 &"
-echo ""
 
 # Get pods
 print_header "Pod Status"
 kubectl get pods -n "$NAMESPACE" -o wide
 
-print_success "Deployment completed for $ENVIRONMENT environment!"
+# Port forwarding info
+print_header "Port Forwarding (for local testing)"
+echo "kubectl port-forward -n $NAMESPACE svc/auth-service 8081:8081 &"
+echo "kubectl port-forward -n $NAMESPACE svc/vehicle-service 8082:8082 &"
+echo "kubectl port-forward -n $NAMESPACE svc/stock-service 8083:8083 &"
+echo "kubectl port-forward -n $NAMESPACE svc/invoice-service 8084:8084 &"
+echo "kubectl port-forward -n $NAMESPACE svc/kafka-ui 8080:8080 &"
 
+print_success "Deployment completed for $ENVIRONMENT environment!"
