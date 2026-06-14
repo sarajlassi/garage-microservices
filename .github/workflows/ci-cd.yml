@@ -79,7 +79,7 @@ jobs:
       - name: Upload coverage
         uses: codecov/codecov-action@v4
         with:
-          files: ./target/coverage/jacoco.xml
+          files: '**/target/site/jacoco/jacoco.xml'
 
   # ========================================
   # Code Quality
@@ -156,7 +156,7 @@ jobs:
     
     strategy:
       matrix:
-        service: [auth-service, vehicle-service, stock-service]
+        service: [auth-service, vehicle-service, stock-service, invoice-service]
     
     steps:
       - uses: actions/checkout@v4
@@ -212,10 +212,9 @@ jobs:
       
       - name: Configure kubectl
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-      
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ${{ runner.temp }}/kubeconfig
+          chmod 600 ${{ runner.temp }}/kubeconfig
+
       - name: Deploy to Dev
         run: bash scripts/deploy-k8s.sh dev latest
         env:
@@ -241,12 +240,13 @@ jobs:
       
       - name: Configure kubectl
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-      
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ${{ runner.temp }}/kubeconfig
+          chmod 600 ${{ runner.temp }}/kubeconfig
+
       - name: Deploy to Staging
         run: bash scripts/deploy-k8s.sh staging latest
+        env:
+          KUBECONFIG: ${{ runner.temp }}/kubeconfig
 
   # ========================================
   # Deploy to Production
@@ -269,12 +269,13 @@ jobs:
       
       - name: Configure kubectl
         run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > $HOME/.kube/config
-          chmod 600 $HOME/.kube/config
-      
+          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ${{ runner.temp }}/kubeconfig
+          chmod 600 ${{ runner.temp }}/kubeconfig
+
       - name: Deploy to Production
         run: bash scripts/deploy-k8s.sh prod ${GITHUB_REF#refs/tags/v}
+        env:
+          KUBECONFIG: ${{ runner.temp }}/kubeconfig
 
   # ========================================
   # Notification

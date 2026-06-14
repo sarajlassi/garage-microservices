@@ -72,10 +72,12 @@ pipeline {
                         docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} -f auth-service/Dockerfile auth-service/
                         docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} -f vehicle-service/Dockerfile vehicle-service/
                         docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} -f stock-service/Dockerfile stock-service/
+                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} -f invoice-service/Dockerfile invoice-service/
 
                         docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG}
                         docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG}
                         docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG}
+                        docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG}
 
                         docker logout ${env.REGISTRY}
                     """
@@ -88,7 +90,24 @@ pipeline {
                 sh """
                     trivy image --exit-code 0 --severity HIGH,CRITICAL \
                         ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
+                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
+                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
+                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} || true
                 """
+            }
+        }
+
+        stage('Approve Production Deploy') {
+            when {
+                expression { params.ENVIRONMENT == 'prod' }
+            }
+            steps {
+                timeout(time: 10, unit: 'MINUTES') {
+                    input message: "Deploy ${params.IMAGE_TAG} to PRODUCTION?", ok: 'Deploy'
+                }
             }
         }
 
@@ -112,18 +131,10 @@ pipeline {
 
                         kubectl set image deployment/stock-service \
                             stock-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} -n ${ns}
-                    """
-                }
-            }
-        }
 
-        stage('Approve Production Deploy') {
-            when {
-                expression { params.ENVIRONMENT == 'prod' }
-            }
-            steps {
-                timeout(time: 10, unit: 'MINUTES') {
-                    input message: "Deploy ${params.IMAGE_TAG} to PRODUCTION?", ok: 'Deploy'
+                        kubectl set image deployment/invoice-service \
+                            invoice-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} -n ${ns}
+                    """
                 }
             }
         }
@@ -137,6 +148,7 @@ pipeline {
                         kubectl rollout status deployment/auth-service -n ${ns} --timeout=5m
                         kubectl rollout status deployment/vehicle-service -n ${ns} --timeout=5m
                         kubectl rollout status deployment/stock-service -n ${ns} --timeout=5m
+                        kubectl rollout status deployment/invoice-service -n ${ns} --timeout=5m
                     """
                 }
             }

@@ -57,13 +57,19 @@ credentials:
             password: "${DOCKER_PASSWORD}"
             description: "Docker Registry Credentials"
 
-          - credentials:
-              - usernamePassword:
-                  scope: GLOBAL
-                  id: "k8s-credentials"
-                  username: "${KUBE_USER}"
-                  password: "${KUBE_PASS}"
-                  description: "Kubernetes Credentials"
+          - implementation: com.cloudbees.plugins.credentials.impl.UsernamePasswordCredentialsImpl
+            scope: GLOBAL
+            id: "k8s-credentials"
+            username: "${KUBE_USER}"
+            password: "${KUBE_PASS}"
+            description: "Kubernetes Credentials"
+
+          - implementation: org.jenkinsci.plugins.plaincredentials.impl.FileCredentialsImpl
+            scope: GLOBAL
+            id: "kubeconfig"
+            fileName: "config"
+            secretBytes: "${KUBECONFIG_B64}"
+            description: "Kubernetes kubeconfig file"
 
 # Tool installations
 tool:
@@ -99,7 +105,7 @@ jobs:
                   scm {
                       git {
                           remote {
-                              url('https://github.com/<your-user>/garage-microservices.git')
+                              url('https://github.com/sjlassi/garage-microservices.git')
                           }
                           branch('*/main')
                       }
