@@ -2,6 +2,7 @@ package com.garage.stock.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,14 +32,11 @@ public class Stock {
     @Column(nullable = false)
     private Integer reserved = 0;  // Quantity reserved for current services
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime lastRestockDate;
 
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime updatedAt;
 
     public Integer getAvailableQuantity() {
