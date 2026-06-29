@@ -40,6 +40,7 @@ public class RepairController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(vehicleService.getServiceRecordById(id));
     }
@@ -59,8 +60,8 @@ public class RepairController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> update(
             @PathVariable Long id,
-            @RequestParam Long vehicleId,
-            @RequestBody VehicleDto.UpdateServiceRequest request) {
+            @RequestParam(required = false) Long vehicleId,
+            @Valid @RequestBody VehicleDto.UpdateServiceRequest request) {
         return ResponseEntity.ok(vehicleService.updateServiceRecord(vehicleId, id, request));
     }
 

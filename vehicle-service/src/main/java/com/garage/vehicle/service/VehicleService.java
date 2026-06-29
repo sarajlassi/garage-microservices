@@ -217,8 +217,8 @@ public class VehicleService {
         ServiceRecord record = serviceRecordRepository.findById(recordId)
                 .orElseThrow(() -> new NoSuchElementException("Service record not found: " + recordId));
 
-        if (!record.getVehicle().getId().equals(vehicleId)) {
-            throw new IllegalArgumentException("Service record does not belong to this vehicle");
+        if (vehicleId != null && !record.getVehicle().getId().equals(vehicleId)) {
+            throw new IllegalArgumentException("Service record does not belong to vehicle " + vehicleId);
         }
 
         if (request.getDescription() != null) record.setDescription(request.getDescription());

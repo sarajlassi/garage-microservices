@@ -22,9 +22,10 @@ public class VehicleController {
     private final VehicleService vehicleService;
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.VehicleResponse> createVehicle(
             @Valid @RequestBody VehicleDto.CreateVehicleRequest request,
-            @RequestHeader("X-User-Id") Long ownerId
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(vehicleService.createVehicle(request, ownerId));
@@ -57,9 +58,10 @@ public class VehicleController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.VehicleResponse> updateVehicle(
             @PathVariable Long id,
-            @RequestBody VehicleDto.UpdateVehicleRequest request
+            @Valid @RequestBody VehicleDto.UpdateVehicleRequest request
     ) {
         return ResponseEntity.ok(vehicleService.updateVehicle(id, request));
     }
@@ -71,7 +73,7 @@ public class VehicleController {
         return ResponseEntity.noContent().build();
     }
 
-    // Service records endpoints
+    // ── Nested service-record endpoints ─────────────────────────────────────
 
     @PostMapping("/{vehicleId}/services")
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
@@ -85,6 +87,7 @@ public class VehicleController {
     }
 
     @GetMapping("/{vehicleId}/services")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<List<VehicleDto.ServiceRecordResponse>> getServiceRecords(
             @PathVariable Long vehicleId
     ) {
@@ -96,8 +99,15 @@ public class VehicleController {
     public ResponseEntity<VehicleDto.ServiceRecordResponse> updateServiceRecord(
             @PathVariable Long vehicleId,
             @PathVariable Long recordId,
-            @RequestBody VehicleDto.UpdateServiceRequest request
+            @Valid @RequestBody VehicleDto.UpdateServiceRequest request
     ) {
         return ResponseEntity.ok(vehicleService.updateServiceRecord(vehicleId, recordId, request));
+    }
+
+    @DeleteMapping("/{vehicleId}/services/{recordId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
+    public ResponseEntity<Void> deleteServiceRecord(@PathVariable Long recordId) {
+        vehicleService.deleteServiceRecord(recordId);
+        return ResponseEntity.noContent().build();
     }
 }
