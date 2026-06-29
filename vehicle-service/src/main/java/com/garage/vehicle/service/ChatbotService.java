@@ -6,7 +6,6 @@ import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
 import com.garage.vehicle.dto.VehicleDto;
 import com.garage.vehicle.entity.ServiceStatus;
-import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,15 +27,20 @@ public class ChatbotService {
 
     private AnthropicClient anthropicClient;
 
-    @PostConstruct
-    public void init() {
-        if (anthropicApiKey != null && !anthropicApiKey.isBlank()) {
+    private synchronized AnthropicClient getClient() {
+        if (anthropicClient == null) {
+            String key = anthropicApiKey != null && !anthropicApiKey.isBlank()
+                    ? anthropicApiKey
+                    : System.getenv("ANTHROPIC_API_KEY");
+            if (key == null || key.isBlank()) {
+                throw new IllegalStateException(
+                        "ANTHROPIC_API_KEY is not configured. Set the environment variable or anthropic.api.key in application.yml.");
+            }
             anthropicClient = AnthropicOkHttpClient.builder()
-                    .apiKey(anthropicApiKey)
+                    .apiKey(key)
                     .build();
-        } else {
-            anthropicClient = AnthropicOkHttpClient.fromEnv();
         }
+        return anthropicClient;
     }
 
     public String chat(String mechanicUsername, String userMessage) {
@@ -49,7 +53,7 @@ public class ChatbotService {
                 .addUserMessage(userMessage)
                 .build();
 
-        Message response = anthropicClient.messages().create(params);
+        Message response = getClient().messages().create(params);
 
         return response.content().stream()
                 .flatMap(block -> block.text().stream())
