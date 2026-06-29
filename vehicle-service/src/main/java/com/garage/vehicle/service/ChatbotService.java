@@ -4,7 +4,6 @@ import com.anthropic.client.AnthropicClient;
 import com.anthropic.client.okhttp.AnthropicOkHttpClient;
 import com.anthropic.models.messages.Message;
 import com.anthropic.models.messages.MessageCreateParams;
-import com.anthropic.models.messages.Model;
 import com.garage.vehicle.dto.VehicleDto;
 import com.garage.vehicle.entity.ServiceStatus;
 import jakarta.annotation.PostConstruct;
@@ -44,9 +43,9 @@ public class ChatbotService {
         String systemPrompt = buildSystemPrompt(mechanicUsername);
 
         MessageCreateParams params = MessageCreateParams.builder()
-                .model(Model.CLAUDE_OPUS_4_8)
+                .model("claude-opus-4-8")
                 .maxTokens(1024L)
-                .addSystemMessage(systemPrompt)
+                .system(systemPrompt)
                 .addUserMessage(userMessage)
                 .build();
 
