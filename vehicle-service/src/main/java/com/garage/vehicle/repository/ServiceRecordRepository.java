@@ -15,4 +15,6 @@ public interface ServiceRecordRepository extends JpaRepository<ServiceRecord, Lo
 
     @org.springframework.data.jpa.repository.Query("SELECT sr FROM ServiceRecord sr WHERE sr.vehicle.ownerId = :ownerId")
     List<ServiceRecord> findByVehicleOwnerId(@org.springframework.data.repository.query.Param("ownerId") Long ownerId);
+
+    List<ServiceRecord> findByMechanicUsername(String mechanicUsername);
 }

@@ -202,6 +202,12 @@ public class VehicleService {
                 .toList();
     }
 
+    public List<VehicleDto.ServiceRecordResponse> getServiceRecordsByMechanic(String mechanicUsername) {
+        return serviceRecordRepository.findByMechanicUsername(mechanicUsername).stream()
+                .map(this::mapToServiceResponse)
+                .toList();
+    }
+
     @Transactional
     public void deleteServiceRecord(Long id) {
         ServiceRecord record = serviceRecordRepository.findById(id)
