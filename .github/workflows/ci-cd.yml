@@ -183,11 +183,19 @@ jobs:
 
       - name: Configure kubeconfig
         run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+          if [ -z "${{ secrets.KUBE_CONFIG }}" ]; then
+            echo "::notice::KUBE_CONFIG secret not set — skipping deployment."
+            echo "SKIP_DEPLOY=true" >> "$GITHUB_ENV"
+          else
+            mkdir -p ~/.kube
+            echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+            chmod 600 ~/.kube/config
+          fi
 
       - name: Deploy to dev
+        if: env.SKIP_DEPLOY != 'true'
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: bash scripts/deploy-k8s.sh dev latest
 
   # ──────────────────────────────────────────
@@ -209,9 +217,17 @@ jobs:
 
       - name: Configure kubeconfig
         run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
-          chmod 600 ~/.kube/config
+          if [ -z "${{ secrets.KUBE_CONFIG }}" ]; then
+            echo "::notice::KUBE_CONFIG secret not set — skipping deployment."
+            echo "SKIP_DEPLOY=true" >> "$GITHUB_ENV"
+          else
+            mkdir -p ~/.kube
+            echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
+            chmod 600 ~/.kube/config
+          fi
 
       - name: Deploy to production
+        if: env.SKIP_DEPLOY != 'true'
+        env:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         run: bash scripts/deploy-k8s.sh prod "${GITHUB_REF#refs/tags/v}"

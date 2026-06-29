@@ -19,7 +19,8 @@ IMAGE_TAG=${2:-latest}
 KUBECONFIG=${KUBECONFIG:-~/.kube/config}
 
 SERVICES=(auth-service vehicle-service stock-service invoice-service)
-IMAGE_PREFIX="docker.io/sjlassi/garage-microservices"
+DOCKER_USERNAME="${DOCKER_USERNAME:-sjlassi}"
+IMAGE_PREFIX="docker.io/${DOCKER_USERNAME}/garage-microservices"
 
 # Functions
 print_header() {
