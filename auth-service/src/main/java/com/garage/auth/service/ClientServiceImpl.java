@@ -66,6 +66,29 @@ public class ClientServiceImpl implements IClientService {
 
     @Override
     @Transactional
+    public Long findOrCreateByEmail(Long ownerId, String firstName, String lastName, String email, String phone) {
+        // If a client with this email already exists, return its ID.
+        if (email != null) {
+            var existing = clientRepository.findByEmail(email);
+            if (existing.isPresent()) {
+                log.debug("Client already exists for email {}", email);
+                return existing.get().getId();
+            }
+        }
+        // Create a new client record from the vehicle event data.
+        Client client = Client.builder()
+                .firstName(firstName != null ? firstName : "")
+                .lastName(lastName != null ? lastName : "")
+                .email(email != null ? email : ownerId + "@garage.local")
+                .phone(phone)
+                .build();
+        Client saved = clientRepository.save(client);
+        log.info("Auto-created client {} for ownerId {}", saved.getId(), ownerId);
+        return saved.getId();
+    }
+
+    @Override
+    @Transactional
     public void incrementVehicleCount(Long clientId) {
         clientRepository.findById(clientId).ifPresent(client -> {
             client.setVehicleCount(client.getVehicleCount() + 1);

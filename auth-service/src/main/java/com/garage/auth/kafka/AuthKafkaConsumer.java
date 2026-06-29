@@ -29,19 +29,34 @@ public class AuthKafkaConsumer {
         try {
             log.info("Received VehicleCreatedEvent for vehicle {} owner {}", event.getVehicleId(), event.getOwnerId());
             if (event.getOwnerId() != null) {
+                Long clientId = resolveOrCreateClient(event);
                 vehicleOwnerCacheRepository.save(
                     VehicleOwnerCache.builder()
                         .vehicleId(event.getVehicleId())
-                        .clientId(event.getOwnerId())
+                        .clientId(clientId)
                         .build()
                 );
-                clientService.incrementVehicleCount(event.getOwnerId());
+                clientService.incrementVehicleCount(clientId);
             }
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Error processing VehicleCreatedEvent: {}", e.getMessage());
             ack.acknowledge();
         }
+    }
+
+    private Long resolveOrCreateClient(KafkaEvents.VehicleCreatedEvent event) {
+        // If we have enough info to look up or create a client, do so.
+        if (event.getOwnerEmail() != null) {
+            return clientService.findOrCreateByEmail(
+                    event.getOwnerId(),
+                    event.getOwnerFirstName(),
+                    event.getOwnerLastName(),
+                    event.getOwnerEmail(),
+                    event.getOwnerPhone());
+        }
+        // Fallback: treat ownerId as clientId (existing client)
+        return event.getOwnerId();
     }
 
     @KafkaListener(

@@ -22,11 +22,13 @@ com\garage\vehicle\VehicleServiceApplication.class
 com\garage\vehicle\controller\VehicleController.class
 com\garage\vehicle\kafka\VehicleKafkaProducer.class
 com\garage\vehicle\entity\ServiceRecord$ServiceRecordBuilder.class
+com\garage\vehicle\config\SwaggerConfig.class
 com\garage\vehicle\kafka\KafkaEvents$ServiceScheduledEvent.class
 com\garage\vehicle\kafka\VehicleKafkaConsumer.class
 com\garage\vehicle\config\GlobalExceptionHandler.class
 com\garage\vehicle\dto\VehicleDto$UpdateServiceRequest.class
 com\garage\vehicle\entity\Vehicle$VehicleBuilder.class
+com\garage\vehicle\controller\RepairController.class
 com\garage\vehicle\kafka\KafkaEvents$VehicleDeletedEvent.class
 com\garage\vehicle\dto\VehicleDto$CreateServiceRequest$CreateServiceRequestBuilder.class
 com\garage\vehicle\config\SecurityConfig.class

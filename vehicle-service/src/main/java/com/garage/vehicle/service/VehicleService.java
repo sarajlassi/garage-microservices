@@ -137,10 +137,9 @@ public class VehicleService {
 
     @Transactional
     public VehicleDto.ServiceRecordResponse createServiceRecord(
-            Long vehicleId, VehicleDto.CreateServiceRequest request) {
+            Long vehicleId, VehicleDto.CreateServiceRequest request, Long headerOwnerId) {
 
-        Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new NoSuchElementException("Vehicle not found: " + vehicleId));
+        Vehicle vehicle = resolveOrCreateVehicle(vehicleId, request, headerOwnerId);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String mechanicUsername = auth != null ? auth.getName() : "unknown";
@@ -166,7 +165,7 @@ public class VehicleService {
 
         kafkaProducer.publishServiceScheduled(KafkaEvents.ServiceScheduledEvent.builder()
                 .serviceRecordId(saved.getId())
-                .vehicleId(vehicleId)
+                .vehicleId(vehicle.getId())
                 .licensePlate(vehicle.getLicensePlate())
                 .description(saved.getDescription())
                 .serviceType(saved.getServiceType())
@@ -242,6 +241,66 @@ public class VehicleService {
         }
 
         return mapToServiceResponse(serviceRecordRepository.save(record));
+    }
+
+    private Vehicle resolveOrCreateVehicle(Long vehicleId, VehicleDto.CreateServiceRequest request, Long headerOwnerId) {
+        // 1. Try by explicit ID
+        if (vehicleId != null) {
+            var byId = vehicleRepository.findById(vehicleId);
+            if (byId.isPresent()) return byId.get();
+        }
+
+        // 2. Try by license plate (vehicle already exists)
+        if (request.getLicensePlate() != null) {
+            var byPlate = vehicleRepository.findByLicensePlate(request.getLicensePlate().toUpperCase());
+            if (byPlate.isPresent()) return byPlate.get();
+        }
+
+        // 3. Auto-create — requires minimum vehicle fields
+        if (request.getLicensePlate() == null || request.getMake() == null
+                || request.getModel() == null || request.getYear() == null) {
+            throw new IllegalArgumentException(
+                    "Véhicule Introuvable");
+        }
+
+        Long ownerId = request.getOwnerId() != null ? request.getOwnerId() : headerOwnerId;
+        if (ownerId == null) {
+            throw new IllegalArgumentException("ownerId is required when creating a new vehicle.");
+        }
+
+        String username = getCurrentUsername();
+        Vehicle newVehicle = Vehicle.builder()
+                .licensePlate(request.getLicensePlate().toUpperCase())
+                .make(request.getMake())
+                .model(request.getModel())
+                .year(request.getYear())
+                .color(request.getColor())
+                .vin(request.getVin())
+                .ownerId(ownerId)
+                .ownerUsername(username)
+                .status(VehicleStatus.ACTIVE)
+                .mileage(request.getMileageAtService())
+                .build();
+
+        Vehicle saved = vehicleRepository.save(newVehicle);
+        log.info("Auto-created vehicle {} for owner {}", saved.getLicensePlate(), ownerId);
+
+        kafkaProducer.publishVehicleCreated(KafkaEvents.VehicleCreatedEvent.builder()
+                .vehicleId(saved.getId())
+                .licensePlate(saved.getLicensePlate())
+                .make(saved.getMake())
+                .model(saved.getModel())
+                .year(saved.getYear())
+                .ownerId(saved.getOwnerId())
+                .ownerUsername(saved.getOwnerUsername())
+                .createdAt(LocalDateTime.now())
+                .ownerFirstName(request.getOwnerFirstName())
+                .ownerLastName(request.getOwnerLastName())
+                .ownerEmail(request.getOwnerEmail())
+                .ownerPhone(request.getOwnerPhone())
+                .build());
+
+        return saved;
     }
 
     private String getCurrentUsername() {

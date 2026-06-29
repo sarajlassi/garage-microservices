@@ -1,10 +1,12 @@
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\config\SecurityConfig.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\entity\Vehicle.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\config\GlobalExceptionHandler.java
+C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\config\SwaggerConfig.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\entity\VehicleStatus.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\security\JwtService.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\kafka\VehicleKafkaConsumer.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\config\KafkaConfig.java
+C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\controller\RepairController.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\controller\VehicleController.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\service\VehicleService.java
 C:\Users\sjlassi\Downloads\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\entity\ServiceType.java

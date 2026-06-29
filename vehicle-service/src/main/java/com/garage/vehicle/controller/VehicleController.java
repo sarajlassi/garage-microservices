@@ -77,10 +77,11 @@ public class VehicleController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> createServiceRecord(
             @PathVariable Long vehicleId,
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
             @Valid @RequestBody VehicleDto.CreateServiceRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(vehicleService.createServiceRecord(vehicleId, request));
+                .body(vehicleService.createServiceRecord(vehicleId, request, ownerId));
     }
 
     @GetMapping("/{vehicleId}/services")

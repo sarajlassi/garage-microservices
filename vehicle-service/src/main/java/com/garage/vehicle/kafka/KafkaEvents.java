@@ -27,6 +27,11 @@ public class KafkaEvents {
         private Long ownerId;
         private String ownerUsername;
         private LocalDateTime createdAt;
+        // Optional — present when the owner is a new client that must be created
+        private String ownerFirstName;
+        private String ownerLastName;
+        private String ownerEmail;
+        private String ownerPhone;
     }
 
     @Data

@@ -18,6 +18,8 @@ public interface IClientService {
 
     void deleteClient(Long id);
 
+    Long findOrCreateByEmail(Long ownerId, String firstName, String lastName, String email, String phone);
+
     void incrementVehicleCount(Long clientId);
 
     void incrementRepairCount(Long clientId, LocalDateTime visitDate);

@@ -47,11 +47,12 @@ public class RepairController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> create(
-            @RequestParam Long vehicleId,
+            @RequestParam(required = false) Long vehicleId,
+            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
             @Valid @RequestBody VehicleDto.CreateServiceRequest request) {
-        log.info("Creating repair for vehicle {}", vehicleId);
+        log.info("Creating repair for vehicle {}", vehicleId != null ? vehicleId : request.getLicensePlate());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(vehicleService.createServiceRecord(vehicleId, request));
+                .body(vehicleService.createServiceRecord(vehicleId, request, ownerId));
     }
 
     @PutMapping("/{id}")

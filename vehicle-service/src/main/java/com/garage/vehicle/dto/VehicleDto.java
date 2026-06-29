@@ -93,6 +93,23 @@ public class VehicleDto {
         private Integer mileageAtService;
         private BigDecimal cost;
         private String notes;
+
+        // Vehicle fields — used to look up an existing vehicle by plate
+        // or create a new one when no vehicleId is provided.
+        private String licensePlate;
+        private String make;
+        private String model;
+        private Integer year;
+        private String color;
+        private String vin;
+        private Long ownerId;
+
+        // Client (owner) fields — used to create the client in auth-service
+        // if they do not exist yet.
+        private String ownerFirstName;
+        private String ownerLastName;
+        private String ownerEmail;
+        private String ownerPhone;
     }
 
     @Data
