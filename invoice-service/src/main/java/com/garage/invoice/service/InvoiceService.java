@@ -148,8 +148,10 @@ public class InvoiceService implements IInvoiceService {
 
     private String generateInvoiceNumber() {
         String year = String.valueOf(LocalDate.now().getYear());
-        long count = invoiceRepository.count() + 1;
-        return String.format("INV-%s-%05d", year, count);
+        String pattern = "INV-" + year + "-%";
+        Long maxSeq = invoiceRepository.findMaxSequenceForYear(pattern);
+        long nextSeq = (maxSeq != null ? maxSeq : 0L) + 1;
+        return String.format("INV-%s-%05d", year, nextSeq);
     }
 
     private InvoiceDto.InvoiceResponse mapToResponse(Invoice inv) {

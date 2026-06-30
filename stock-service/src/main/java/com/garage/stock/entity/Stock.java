@@ -32,6 +32,7 @@ public class Stock {
     @Column(nullable = false)
     private Integer reserved = 0;  // Quantity reserved for current services
 
+    @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

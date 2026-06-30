@@ -27,6 +27,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: true
+        spring.json.type.mapping: "ProductAddedEvent:com.garage.stock.kafka.KafkaEvents$ProductAddedEvent,ProductLowStockEvent:com.garage.stock.kafka.KafkaEvents$ProductLowStockEvent,StockReservedEvent:com.garage.stock.kafka.KafkaEvents$StockReservedEvent,SupplierOrderPlacedEvent:com.garage.stock.kafka.KafkaEvents$SupplierOrderPlacedEvent"
     consumer:
       group-id: stock-service-group
       auto-offset-reset: earliest

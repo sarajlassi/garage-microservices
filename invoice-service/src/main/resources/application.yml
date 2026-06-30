@@ -27,6 +27,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: true
+        spring.json.type.mapping: "InvoicePaidEvent:com.garage.invoice.kafka.KafkaEvents$InvoicePaidEvent,InvoiceCreatedEvent:com.garage.invoice.kafka.KafkaEvents$InvoiceCreatedEvent"
     consumer:
       group-id: invoice-service-group
       auto-offset-reset: earliest

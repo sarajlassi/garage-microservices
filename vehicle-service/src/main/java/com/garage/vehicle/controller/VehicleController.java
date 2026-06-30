@@ -104,8 +104,10 @@ public class VehicleController {
 
     @DeleteMapping("/{vehicleId}/services/{recordId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
-    public ResponseEntity<Void> deleteServiceRecord(@PathVariable Long recordId) {
-        vehicleService.deleteServiceRecord(recordId);
+    public ResponseEntity<Void> deleteServiceRecord(
+            @PathVariable Long vehicleId,
+            @PathVariable Long recordId) {
+        vehicleService.deleteServiceRecord(vehicleId, recordId);
         return ResponseEntity.noContent().build();
     }
 }

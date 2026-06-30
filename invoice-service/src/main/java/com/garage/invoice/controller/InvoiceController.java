@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class InvoiceController {
     private final IInvoiceService invoiceService;
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<List<InvoiceDto.InvoiceResponse>> getAll(
             @RequestParam(required = false) Long clientId) {
         if (clientId != null) return ResponseEntity.ok(invoiceService.getByClientId(clientId));
@@ -27,11 +29,13 @@ public class InvoiceController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<InvoiceDto.InvoiceResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(invoiceService.getById(id));
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<InvoiceDto.InvoiceResponse> create(
             @Valid @RequestBody InvoiceDto.CreateRequest request) {
         log.info("Creating invoice for client {}", request.getClientId());
@@ -39,6 +43,7 @@ public class InvoiceController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<InvoiceDto.InvoiceResponse> update(
             @PathVariable Long id,
             @RequestBody InvoiceDto.UpdateRequest request) {
@@ -46,6 +51,7 @@ public class InvoiceController {
     }
 
     @PutMapping("/{id}/pay")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<InvoiceDto.InvoiceResponse> pay(
             @PathVariable Long id,
             @Valid @RequestBody InvoiceDto.PayRequest request) {
@@ -54,6 +60,7 @@ public class InvoiceController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         invoiceService.delete(id);
         return ResponseEntity.noContent().build();

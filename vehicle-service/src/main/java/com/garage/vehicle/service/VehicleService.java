@@ -219,9 +219,12 @@ public class VehicleService {
     }
 
     @Transactional
-    public void deleteServiceRecord(Long id) {
+    public void deleteServiceRecord(Long vehicleId, Long id) {
         ServiceRecord record = serviceRecordRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Service record not found: " + id));
+        if (vehicleId != null && !record.getVehicle().getId().equals(vehicleId)) {
+            throw new IllegalArgumentException("Service record does not belong to vehicle " + vehicleId);
+        }
         serviceRecordRepository.delete(record);
         log.info("Service record {} deleted", id);
     }

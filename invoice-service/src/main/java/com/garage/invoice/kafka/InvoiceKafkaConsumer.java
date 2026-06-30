@@ -38,8 +38,10 @@ public class InvoiceKafkaConsumer {
     )
     public void onUserRegistered(@Payload KafkaEvents.UserRegisteredEvent event, Acknowledgment ack) {
         try {
-            log.info("UserRegisteredEvent received for user {}", event.getUsername());
-            dashboardService.incrementNewClients();
+            log.info("UserRegisteredEvent received for user {} (role={})", event.getUsername(), event.getRole());
+            if ("MECANICIEN".equals(event.getRole())) {
+                dashboardService.incrementNewClients();
+            }
             ack.acknowledge();
         } catch (Exception e) {
             log.error("Error processing UserRegisteredEvent: {}", e.getMessage());

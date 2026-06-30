@@ -36,6 +36,7 @@ public class StockHistory {
 
     private Long mechanicId;  // If used by a mechanic
 
+    @Builder.Default
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 

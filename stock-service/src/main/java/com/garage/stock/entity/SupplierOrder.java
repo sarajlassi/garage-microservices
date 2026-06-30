@@ -35,24 +35,19 @@ public class SupplierOrder {
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.PENDING;  // PENDING, ORDERED, IN_TRANSIT, RECEIVED, CANCELLED
 
-    @Temporal(TemporalType.DATE)
     private LocalDate orderDate;
 
-    @Temporal(TemporalType.DATE)
     private LocalDate expectedDeliveryDate;
 
-    @Temporal(TemporalType.DATE)
     private LocalDate actualDeliveryDate;
 
     private String referenceNumber;
 
     private String notes;
 
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt;
 
-    @Temporal(TemporalType.TIMESTAMP)
     private LocalDateTime updatedAt;
 
     @PreUpdate
@@ -65,6 +60,7 @@ public class SupplierOrder {
 
     @PrePersist
     protected void onCreate() {
+        createdAt = LocalDateTime.now();
         if (orderDate == null) {
             orderDate = LocalDate.now();
         }

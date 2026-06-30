@@ -141,7 +141,10 @@ public class AuthService {
             throw new IllegalArgumentException("Refresh token expired or invalid");
         }
 
-        String newAccessToken = jwtService.generateToken(user);
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", user.getId());
+        claims.put("role", user.getRole().name());
+        String newAccessToken = jwtService.generateToken(claims, user);
         revokeAllUserTokens(user);
         saveUserToken(user, newAccessToken);
 

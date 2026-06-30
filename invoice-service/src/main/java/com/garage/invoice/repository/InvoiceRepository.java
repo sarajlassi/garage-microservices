@@ -28,4 +28,7 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     long countUnpaidInvoices();
 
     List<Invoice> findTop10ByOrderByCreatedAtDesc();
+
+    @Query(value = "SELECT COALESCE(MAX(CAST(SPLIT_PART(invoice_number, '-', 3) AS BIGINT)), 0) FROM invoices WHERE invoice_number LIKE :pattern", nativeQuery = true)
+    Long findMaxSequenceForYear(@Param("pattern") String pattern);
 }
