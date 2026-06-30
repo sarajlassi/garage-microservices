@@ -1,6 +1,6 @@
-package com.garage.auth.repository;
+package com.garage.vehicle.repository;
 
-import com.garage.auth.entity.Client;
+import com.garage.vehicle.entity.Client;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

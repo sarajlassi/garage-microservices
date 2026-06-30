@@ -24,11 +24,10 @@ public class VehicleController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.VehicleResponse> createVehicle(
-            @Valid @RequestBody VehicleDto.CreateVehicleRequest request,
-            @RequestHeader(value = "X-User-Id", required = false) Long ownerId
+            @Valid @RequestBody VehicleDto.CreateVehicleRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(vehicleService.createVehicle(request, ownerId));
+                .body(vehicleService.createVehicle(request));
     }
 
     @GetMapping("/{id}")
@@ -42,11 +41,11 @@ public class VehicleController {
         return ResponseEntity.ok(vehicleService.getAllVehicles());
     }
 
-    @GetMapping("/owner/{ownerId}")
-    public ResponseEntity<List<VehicleDto.VehicleResponse>> getVehiclesByOwner(
-            @PathVariable Long ownerId
+    @GetMapping("/owner/{clientId}")
+    public ResponseEntity<List<VehicleDto.VehicleResponse>> getVehiclesByClient(
+            @PathVariable Long clientId
     ) {
-        return ResponseEntity.ok(vehicleService.getVehiclesByOwner(ownerId));
+        return ResponseEntity.ok(vehicleService.getVehiclesByClient(clientId));
     }
 
     @GetMapping("/status/{status}")
@@ -79,11 +78,10 @@ public class VehicleController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> createServiceRecord(
             @PathVariable Long vehicleId,
-            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
             @Valid @RequestBody VehicleDto.CreateServiceRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(vehicleService.createServiceRecord(vehicleId, request, ownerId));
+                .body(vehicleService.createServiceRecord(vehicleId, request));
     }
 
     @GetMapping("/{vehicleId}/services")

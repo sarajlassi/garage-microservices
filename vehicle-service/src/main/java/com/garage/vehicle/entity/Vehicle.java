@@ -35,11 +35,12 @@ public class Vehicle {
     @Column(unique = true)
     private String vin;
 
-    @Column(nullable = false)
-    private Long ownerId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
-    @Column(name = "owner_username")
-    private String ownerUsername;
+    @Column(name = "created_by_username")
+    private String createdByUsername;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

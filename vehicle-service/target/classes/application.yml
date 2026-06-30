@@ -35,7 +35,7 @@ spring:
       properties:
         spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
         spring.json.trusted.packages: "*"
-        spring.json.type.mapping: "UserRegisteredEvent:com.garage.vehicle.kafka.KafkaEvents$UserRegisteredEvent"
+        spring.json.type.mapping: "UserRegisteredEvent:com.garage.vehicle.kafka.KafkaEvents$UserRegisteredEvent,InvoicePaidEvent:com.garage.vehicle.kafka.KafkaEvents$InvoicePaidEvent"
 
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
@@ -48,10 +48,11 @@ kafka:
     service-scheduled: service-scheduled
     user-registered: user-registered    # consumed from auth-service
     product-low-stock: product-low-stock  # consumed from stock-service
+    invoice-paid: invoice-paid          # consumed from invoice-service
 
-anthropic:
-  api:
-    key: ${ANTHROPIC_API_KEY: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}
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.2
 
 management:
   endpoints:

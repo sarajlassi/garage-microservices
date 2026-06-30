@@ -10,7 +10,8 @@ import java.util.Optional;
 
 @Repository
 public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
-    List<Vehicle> findByOwnerId(Long ownerId);
+    List<Vehicle> findByClientId(Long clientId);
+    int countByClientId(Long clientId);
     List<Vehicle> findByStatus(VehicleStatus status);
     Optional<Vehicle> findByLicensePlate(String licensePlate);
     Optional<Vehicle> findByVin(String vin);

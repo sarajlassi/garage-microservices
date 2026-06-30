@@ -38,6 +38,14 @@ public class VehicleDto {
         private String vin;
         private Integer mileage;
         private String notes;
+
+        // Owning client — either reference an existing client by ID,
+        // or supply enough info to find-or-create one by email.
+        private Long clientId;
+        private String clientFirstName;
+        private String clientLastName;
+        private String clientEmail;
+        private String clientPhone;
     }
 
     @Data
@@ -65,8 +73,12 @@ public class VehicleDto {
         private Integer year;
         private String color;
         private String vin;
-        private Long ownerId;
-        private String ownerUsername;
+        private Long clientId;
+        private String clientFirstName;
+        private String clientLastName;
+        private String clientEmail;
+        private String clientPhone;
+        private String createdByUsername;
         private VehicleStatus status;
         private Integer mileage;
         private LocalDate lastServiceDate;
@@ -102,14 +114,14 @@ public class VehicleDto {
         private Integer year;
         private String color;
         private String vin;
-        private Long ownerId;
+        private Long clientId;
 
-        // Client (owner) fields — used to create the client in auth-service
-        // if they do not exist yet.
-        private String ownerFirstName;
-        private String ownerLastName;
-        private String ownerEmail;
-        private String ownerPhone;
+        // Client fields — used to find-or-create the client if they
+        // do not exist yet.
+        private String clientFirstName;
+        private String clientLastName;
+        private String clientEmail;
+        private String clientPhone;
     }
 
     @Data

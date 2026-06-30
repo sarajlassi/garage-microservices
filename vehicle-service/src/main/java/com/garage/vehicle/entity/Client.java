@@ -1,10 +1,12 @@
-package com.garage.auth.entity;
+package com.garage.vehicle.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "clients")
@@ -30,10 +32,6 @@ public class Client {
     private String phone;
 
     @Builder.Default
-    @Column(name = "vehicle_count")
-    private int vehicleCount = 0;
-
-    @Builder.Default
     @Column(name = "repair_count")
     private int repairCount = 0;
 
@@ -50,10 +48,13 @@ public class Client {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Builder.Default
+    @OneToMany(mappedBy = "client", fetch = FetchType.LAZY)
+    private List<Vehicle> vehicles = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-
         updatedAt = LocalDateTime.now();
         if (totalSpent == null) totalSpent = BigDecimal.ZERO;
     }
