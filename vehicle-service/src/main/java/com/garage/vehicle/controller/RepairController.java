@@ -64,10 +64,10 @@ public class RepairController {
         return ResponseEntity.ok(vehicleService.updateServiceRecord(vehicleId, id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{vehicleId}/services/{recordId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        vehicleService.deleteServiceRecord(id);
+    public ResponseEntity<Void> delete(@PathVariable Long vehicleId,@PathVariable Long recordId) {
+        vehicleService.deleteServiceRecord(vehicleId,recordId);
         return ResponseEntity.noContent().build();
     }
 }

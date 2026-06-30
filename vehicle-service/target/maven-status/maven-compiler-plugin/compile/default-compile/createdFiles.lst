@@ -15,6 +15,7 @@ com\garage\vehicle\service\ChatbotService.class
 com\garage\vehicle\repository\ClientRepository.class
 com\garage\vehicle\dto\ChatDto$ChatRequest.class
 com\garage\vehicle\dto\ChatDto$ChatResponse.class
+com\garage\vehicle\service\ChatbotService$OllamaChatResponse.class
 com\garage\vehicle\entity\Client$ClientBuilder.class
 com\garage\vehicle\service\ClientServiceImpl.class
 com\garage\vehicle\repository\ServiceRecordRepository.class
@@ -30,7 +31,10 @@ com\garage\vehicle\dto\ClientDto$UpdateRequest.class
 com\garage\vehicle\dto\ClientDto$ClientResponse.class
 com\garage\vehicle\entity\ServiceType.class
 com\garage\vehicle\dto\ClientDto.class
+com\garage\vehicle\service\ChatbotService$OllamaChatRequest.class
+com\garage\vehicle\service\ChatbotService$OllamaMessageWrapper.class
 com\garage\vehicle\dto\VehicleDto$UpdateVehicleRequest.class
+com\garage\vehicle\service\ChatbotService$OllamaMessage.class
 com\garage\vehicle\repository\VehicleRepository.class
 com\garage\vehicle\dto\VehicleDto$CreateVehicleRequest$CreateVehicleRequestBuilder.class
 com\garage\vehicle\entity\Client.class

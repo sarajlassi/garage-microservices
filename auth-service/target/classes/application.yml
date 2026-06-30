@@ -27,6 +27,7 @@ spring:
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
       properties:
         spring.json.add.type.headers: true
+        spring.json.type.mapping: "UserRegisteredEvent:com.garage.auth.kafka.KafkaEvents$UserRegisteredEvent,UserLoginEvent:com.garage.auth.kafka.KafkaEvents$UserLoginEvent,TokenValidatedEvent:com.garage.auth.kafka.KafkaEvents$TokenValidatedEvent"
     consumer:
       group-id: auth-service-group
       auto-offset-reset: earliest
