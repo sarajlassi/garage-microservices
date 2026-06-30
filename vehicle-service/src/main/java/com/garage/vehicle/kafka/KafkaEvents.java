@@ -24,14 +24,12 @@ public class KafkaEvents {
         private String make;
         private String model;
         private Integer year;
-        private Long ownerId;
-        private String ownerUsername;
+        private Long clientId;
+        private String clientFirstName;
+        private String clientLastName;
+        private String clientEmail;
+        private String clientPhone;
         private LocalDateTime createdAt;
-        // Optional — present when the owner is a new client that must be created
-        private String ownerFirstName;
-        private String ownerLastName;
-        private String ownerEmail;
-        private String ownerPhone;
     }
 
     @Data
@@ -53,7 +51,7 @@ public class KafkaEvents {
     public static class VehicleDeletedEvent {
         private Long vehicleId;
         private String licensePlate;
-        private Long ownerId;
+        private Long clientId;
         private LocalDateTime deletedAt;
     }
 
@@ -65,6 +63,7 @@ public class KafkaEvents {
         private Long serviceRecordId;
         private Long vehicleId;
         private String licensePlate;
+        private Long clientId;
         private String description;
         private ServiceType serviceType;
         private LocalDate scheduledDate;
@@ -87,5 +86,18 @@ public class KafkaEvents {
         private String lastName;
         private String role;
         private LocalDateTime registeredAt;
+    }
+
+    // Consumed from invoice-service
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class InvoicePaidEvent {
+        private Long invoiceId;
+        private String invoiceNumber;
+        private Long clientId;
+        private BigDecimal amount;
+        private LocalDateTime paidAt;
     }
 }

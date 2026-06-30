@@ -1,4 +1,4 @@
-package com.garage.auth.dto;
+package com.garage.vehicle.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

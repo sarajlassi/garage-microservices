@@ -1,8 +1,9 @@
-package com.garage.auth.service;
+package com.garage.vehicle.service;
 
-import com.garage.auth.dto.ClientDto;
-import com.garage.auth.entity.Client;
-import com.garage.auth.repository.ClientRepository;
+import com.garage.vehicle.dto.ClientDto;
+import com.garage.vehicle.entity.Client;
+import com.garage.vehicle.repository.ClientRepository;
+import com.garage.vehicle.repository.VehicleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ import java.util.NoSuchElementException;
 public class ClientServiceImpl implements IClientService {
 
     private final ClientRepository clientRepository;
+    private final VehicleRepository vehicleRepository;
 
     @Override
     public List<ClientDto.ClientResponse> getAllClients() {
@@ -66,45 +68,36 @@ public class ClientServiceImpl implements IClientService {
 
     @Override
     @Transactional
-    public Long findOrCreateByEmail(Long ownerId, String firstName, String lastName, String email, String phone) {
-        // If a client with this email already exists, return its ID.
+    public Client findOrCreateByEmail(String firstName, String lastName, String email, String phone) {
         if (email != null) {
             var existing = clientRepository.findByEmail(email);
             if (existing.isPresent()) {
-                log.debug("Client already exists for email {}", email);
-                return existing.get().getId();
+                return existing.get();
             }
         }
-        // Create a new client record from the vehicle event data.
         Client client = Client.builder()
                 .firstName(firstName != null ? firstName : "")
                 .lastName(lastName != null ? lastName : "")
-                .email(email != null ? email : ownerId + "@garage.local")
+                .email(email)
                 .phone(phone)
                 .build();
         Client saved = clientRepository.save(client);
-        log.info("Auto-created client {} for ownerId {}", saved.getId(), ownerId);
-        return saved.getId();
+        log.info("Auto-created client {} ({})", saved.getId(), saved.getEmail());
+        return saved;
+    }
+
+    @Override
+    public Client getClientEntityById(Long id) {
+        return findById(id);
     }
 
     @Override
     @Transactional
-    public void incrementVehicleCount(Long clientId) {
-        clientRepository.findById(clientId).ifPresent(client -> {
-            client.setVehicleCount(client.getVehicleCount() + 1);
-            clientRepository.save(client);
-            log.debug("Incremented vehicleCount for client {}", clientId);
-        });
-    }
-
-    @Override
-    @Transactional
-    public void incrementRepairCount(Long clientId, LocalDateTime visitDate) {
+    public void registerVisit(Long clientId, LocalDateTime visitDate) {
         clientRepository.findById(clientId).ifPresent(client -> {
             client.setRepairCount(client.getRepairCount() + 1);
-            client.setLastVisit(visitDate);
+            client.setLastVisit(visitDate != null ? visitDate : LocalDateTime.now());
             clientRepository.save(client);
-            log.debug("Incremented repairCount for client {}", clientId);
         });
     }
 
@@ -115,7 +108,6 @@ public class ClientServiceImpl implements IClientService {
             BigDecimal current = client.getTotalSpent() != null ? client.getTotalSpent() : BigDecimal.ZERO;
             client.setTotalSpent(current.add(amount));
             clientRepository.save(client);
-            log.debug("Updated totalSpent for client {}", clientId);
         });
     }
 
@@ -131,7 +123,7 @@ public class ClientServiceImpl implements IClientService {
                 .lastName(client.getLastName())
                 .email(client.getEmail())
                 .phone(client.getPhone())
-                .vehicleCount(client.getVehicleCount())
+                .vehicleCount(vehicleRepository.countByClientId(client.getId()))
                 .repairCount(client.getRepairCount())
                 .totalSpent(client.getTotalSpent() != null ? client.getTotalSpent() : BigDecimal.ZERO)
                 .lastVisit(client.getLastVisit() != null ? client.getLastVisit().toString() : null)

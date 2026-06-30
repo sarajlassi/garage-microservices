@@ -1,7 +1,7 @@
-package com.garage.auth.controller;
+package com.garage.vehicle.controller;
 
-import com.garage.auth.dto.ClientDto;
-import com.garage.auth.service.IClientService;
+import com.garage.vehicle.dto.ClientDto;
+import com.garage.vehicle.service.IClientService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

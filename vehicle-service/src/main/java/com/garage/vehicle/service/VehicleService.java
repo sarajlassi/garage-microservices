@@ -25,15 +25,19 @@ public class VehicleService {
     private final VehicleRepository vehicleRepository;
     private final ServiceRecordRepository serviceRecordRepository;
     private final VehicleKafkaProducer kafkaProducer;
+    private final IClientService clientService;
 
     @Transactional
-    public VehicleDto.VehicleResponse createVehicle(VehicleDto.CreateVehicleRequest request, Long ownerId) {
+    public VehicleDto.VehicleResponse createVehicle(VehicleDto.CreateVehicleRequest request) {
         if (vehicleRepository.existsByLicensePlate(request.getLicensePlate())) {
             throw new IllegalArgumentException("License plate already registered: " + request.getLicensePlate());
         }
         if (request.getVin() != null && vehicleRepository.existsByVin(request.getVin())) {
             throw new IllegalArgumentException("VIN already registered: " + request.getVin());
         }
+
+        Client client = resolveClient(request.getClientId(), request.getClientFirstName(),
+                request.getClientLastName(), request.getClientEmail(), request.getClientPhone());
 
         String username = getCurrentUsername();
 
@@ -44,15 +48,15 @@ public class VehicleService {
                 .year(request.getYear())
                 .color(request.getColor())
                 .vin(request.getVin())
-                .ownerId(ownerId)
-                .ownerUsername(username)
+                .client(client)
+                .createdByUsername(username)
                 .status(VehicleStatus.ACTIVE)
                 .mileage(request.getMileage())
                 .notes(request.getNotes())
                 .build();
 
         Vehicle saved = vehicleRepository.save(vehicle);
-        log.info("Vehicle created: {} for owner: {}", saved.getLicensePlate(), ownerId);
+        log.info("Vehicle created: {} for client: {}", saved.getLicensePlate(), client.getId());
 
         kafkaProducer.publishVehicleCreated(KafkaEvents.VehicleCreatedEvent.builder()
                 .vehicleId(saved.getId())
@@ -60,8 +64,11 @@ public class VehicleService {
                 .make(saved.getMake())
                 .model(saved.getModel())
                 .year(saved.getYear())
-                .ownerId(saved.getOwnerId())
-                .ownerUsername(saved.getOwnerUsername())
+                .clientId(client.getId())
+                .clientFirstName(client.getFirstName())
+                .clientLastName(client.getLastName())
+                .clientEmail(client.getEmail())
+                .clientPhone(client.getPhone())
                 .createdAt(LocalDateTime.now())
                 .build());
 
@@ -80,8 +87,8 @@ public class VehicleService {
                 .toList();
     }
 
-    public List<VehicleDto.VehicleResponse> getVehiclesByOwner(Long ownerId) {
-        return vehicleRepository.findByOwnerId(ownerId).stream()
+    public List<VehicleDto.VehicleResponse> getVehiclesByClient(Long clientId) {
+        return vehicleRepository.findByClientId(clientId).stream()
                 .map(this::mapToVehicleResponse)
                 .toList();
     }
@@ -130,16 +137,16 @@ public class VehicleService {
         kafkaProducer.publishVehicleDeleted(KafkaEvents.VehicleDeletedEvent.builder()
                 .vehicleId(vehicle.getId())
                 .licensePlate(vehicle.getLicensePlate())
-                .ownerId(vehicle.getOwnerId())
+                .clientId(vehicle.getClient().getId())
                 .deletedAt(LocalDateTime.now())
                 .build());
     }
 
     @Transactional
     public VehicleDto.ServiceRecordResponse createServiceRecord(
-            Long vehicleId, VehicleDto.CreateServiceRequest request, Long headerOwnerId) {
+            Long vehicleId, VehicleDto.CreateServiceRequest request) {
 
-        Vehicle vehicle = resolveOrCreateVehicle(vehicleId, request, headerOwnerId);
+        Vehicle vehicle = resolveOrCreateVehicle(vehicleId, request);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String mechanicUsername = auth != null ? auth.getName() : "unknown";
@@ -163,10 +170,13 @@ public class VehicleService {
         vehicle.setStatus(VehicleStatus.IN_SERVICE);
         vehicleRepository.save(vehicle);
 
+        clientService.registerVisit(vehicle.getClient().getId(), LocalDateTime.now());
+
         kafkaProducer.publishServiceScheduled(KafkaEvents.ServiceScheduledEvent.builder()
                 .serviceRecordId(saved.getId())
                 .vehicleId(vehicle.getId())
                 .licensePlate(vehicle.getLicensePlate())
+                .clientId(vehicle.getClient().getId())
                 .description(saved.getDescription())
                 .serviceType(saved.getServiceType())
                 .scheduledDate(saved.getScheduledDate())
@@ -196,8 +206,8 @@ public class VehicleService {
                 .orElseThrow(() -> new NoSuchElementException("Service record not found: " + id));
     }
 
-    public List<VehicleDto.ServiceRecordResponse> getServiceRecordsByOwner(Long ownerId) {
-        return serviceRecordRepository.findByVehicleOwnerId(ownerId).stream()
+    public List<VehicleDto.ServiceRecordResponse> getServiceRecordsByClient(Long clientId) {
+        return serviceRecordRepository.findByVehicleClientId(clientId).stream()
                 .map(this::mapToServiceResponse)
                 .toList();
     }
@@ -249,7 +259,7 @@ public class VehicleService {
         return mapToServiceResponse(serviceRecordRepository.save(record));
     }
 
-    private Vehicle resolveOrCreateVehicle(Long vehicleId, VehicleDto.CreateServiceRequest request, Long headerOwnerId) {
+    private Vehicle resolveOrCreateVehicle(Long vehicleId, VehicleDto.CreateServiceRequest request) {
         // 1. Try by explicit ID
         if (vehicleId != null) {
             var byId = vehicleRepository.findById(vehicleId);
@@ -269,10 +279,8 @@ public class VehicleService {
                     "Véhicule Introuvable");
         }
 
-        Long ownerId = request.getOwnerId() != null ? request.getOwnerId() : headerOwnerId;
-        if (ownerId == null) {
-            throw new IllegalArgumentException("ownerId is required when creating a new vehicle.");
-        }
+        Client client = resolveClient(request.getClientId(), request.getClientFirstName(),
+                request.getClientLastName(), request.getClientEmail(), request.getClientPhone());
 
         String username = getCurrentUsername();
         Vehicle newVehicle = Vehicle.builder()
@@ -282,14 +290,14 @@ public class VehicleService {
                 .year(request.getYear())
                 .color(request.getColor())
                 .vin(request.getVin())
-                .ownerId(ownerId)
-                .ownerUsername(username)
+                .client(client)
+                .createdByUsername(username)
                 .status(VehicleStatus.ACTIVE)
                 .mileage(request.getMileageAtService())
                 .build();
 
         Vehicle saved = vehicleRepository.save(newVehicle);
-        log.info("Auto-created vehicle {} for owner {}", saved.getLicensePlate(), ownerId);
+        log.info("Auto-created vehicle {} for client {}", saved.getLicensePlate(), client.getId());
 
         kafkaProducer.publishVehicleCreated(KafkaEvents.VehicleCreatedEvent.builder()
                 .vehicleId(saved.getId())
@@ -297,16 +305,25 @@ public class VehicleService {
                 .make(saved.getMake())
                 .model(saved.getModel())
                 .year(saved.getYear())
-                .ownerId(saved.getOwnerId())
-                .ownerUsername(saved.getOwnerUsername())
+                .clientId(client.getId())
+                .clientFirstName(client.getFirstName())
+                .clientLastName(client.getLastName())
+                .clientEmail(client.getEmail())
+                .clientPhone(client.getPhone())
                 .createdAt(LocalDateTime.now())
-                .ownerFirstName(request.getOwnerFirstName())
-                .ownerLastName(request.getOwnerLastName())
-                .ownerEmail(request.getOwnerEmail())
-                .ownerPhone(request.getOwnerPhone())
                 .build());
 
         return saved;
+    }
+
+    private Client resolveClient(Long clientId, String firstName, String lastName, String email, String phone) {
+        if (clientId != null) {
+            return clientService.getClientEntityById(clientId);
+        }
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("clientId or clientEmail is required to identify the vehicle's owner.");
+        }
+        return clientService.findOrCreateByEmail(firstName, lastName, email, phone);
     }
 
     private String getCurrentUsername() {
@@ -315,6 +332,7 @@ public class VehicleService {
     }
 
     private VehicleDto.VehicleResponse mapToVehicleResponse(Vehicle v) {
+        Client client = v.getClient();
         return VehicleDto.VehicleResponse.builder()
                 .id(v.getId())
                 .licensePlate(v.getLicensePlate())
@@ -323,8 +341,12 @@ public class VehicleService {
                 .year(v.getYear())
                 .color(v.getColor())
                 .vin(v.getVin())
-                .ownerId(v.getOwnerId())
-                .ownerUsername(v.getOwnerUsername())
+                .clientId(client != null ? client.getId() : null)
+                .clientFirstName(client != null ? client.getFirstName() : null)
+                .clientLastName(client != null ? client.getLastName() : null)
+                .clientEmail(client != null ? client.getEmail() : null)
+                .clientPhone(client != null ? client.getPhone() : null)
+                .createdByUsername(v.getCreatedByUsername())
                 .status(v.getStatus())
                 .mileage(v.getMileage())
                 .lastServiceDate(v.getLastServiceDate())

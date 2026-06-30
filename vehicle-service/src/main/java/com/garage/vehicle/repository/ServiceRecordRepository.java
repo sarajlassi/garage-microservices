@@ -13,8 +13,8 @@ public interface ServiceRecordRepository extends JpaRepository<ServiceRecord, Lo
     List<ServiceRecord> findByServiceStatus(ServiceStatus status);
     List<ServiceRecord> findByMechanicId(Long mechanicId);
 
-    @org.springframework.data.jpa.repository.Query("SELECT sr FROM ServiceRecord sr WHERE sr.vehicle.ownerId = :ownerId")
-    List<ServiceRecord> findByVehicleOwnerId(@org.springframework.data.repository.query.Param("ownerId") Long ownerId);
+    @org.springframework.data.jpa.repository.Query("SELECT sr FROM ServiceRecord sr WHERE sr.vehicle.client.id = :clientId")
+    List<ServiceRecord> findByVehicleClientId(@org.springframework.data.repository.query.Param("clientId") Long clientId);
 
     List<ServiceRecord> findByMechanicUsername(String mechanicUsername);
 }

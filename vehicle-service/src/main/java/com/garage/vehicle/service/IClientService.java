@@ -1,6 +1,7 @@
-package com.garage.auth.service;
+package com.garage.vehicle.service;
 
-import com.garage.auth.dto.ClientDto;
+import com.garage.vehicle.dto.ClientDto;
+import com.garage.vehicle.entity.Client;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,11 +19,11 @@ public interface IClientService {
 
     void deleteClient(Long id);
 
-    Long findOrCreateByEmail(Long ownerId, String firstName, String lastName, String email, String phone);
+    Client findOrCreateByEmail(String firstName, String lastName, String email, String phone);
 
-    void incrementVehicleCount(Long clientId);
+    Client getClientEntityById(Long id);
 
-    void incrementRepairCount(Long clientId, LocalDateTime visitDate);
+    void registerVisit(Long clientId, LocalDateTime visitDate);
 
     void addTotalSpent(Long clientId, BigDecimal amount);
 }

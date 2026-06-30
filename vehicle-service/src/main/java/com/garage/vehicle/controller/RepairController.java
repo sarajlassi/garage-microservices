@@ -34,7 +34,7 @@ public class RepairController {
             return ResponseEntity.ok(vehicleService.getServiceRecordsByVehicle(vehicleId));
         }
         if (clientId != null) {
-            return ResponseEntity.ok(vehicleService.getServiceRecordsByOwner(clientId));
+            return ResponseEntity.ok(vehicleService.getServiceRecordsByClient(clientId));
         }
         return ResponseEntity.ok(vehicleService.getAllServiceRecords());
     }
@@ -49,11 +49,10 @@ public class RepairController {
     @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
     public ResponseEntity<VehicleDto.ServiceRecordResponse> create(
             @RequestParam(required = false) Long vehicleId,
-            @RequestHeader(value = "X-User-Id", required = false) Long ownerId,
             @Valid @RequestBody VehicleDto.CreateServiceRequest request) {
         log.info("Creating repair for vehicle {}", vehicleId != null ? vehicleId : request.getLicensePlate());
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(vehicleService.createServiceRecord(vehicleId, request, ownerId));
+                .body(vehicleService.createServiceRecord(vehicleId, request));
     }
 
     @PutMapping("/{id}")
