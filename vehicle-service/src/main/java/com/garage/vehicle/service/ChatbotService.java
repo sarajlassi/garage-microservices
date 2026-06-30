@@ -1,15 +1,12 @@
 package com.garage.vehicle.service;
 
-import com.anthropic.client.AnthropicClient;
-import com.anthropic.client.okhttp.AnthropicOkHttpClient;
-import com.anthropic.models.messages.Message;
-import com.anthropic.models.messages.MessageCreateParams;
 import com.garage.vehicle.dto.VehicleDto;
 import com.garage.vehicle.entity.ServiceStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -22,43 +19,47 @@ public class ChatbotService {
 
     private final VehicleService vehicleService;
 
-    @Value("${anthropic.api.key:}")
-    private String anthropicApiKey;
+    @Value("${ollama.base-url:http://localhost:11434}")
+    private String ollamaBaseUrl;
 
-    private AnthropicClient anthropicClient;
+    @Value("${ollama.model:llama3.2}")
+    private String ollamaModel;
 
-    private synchronized AnthropicClient getClient() {
-        if (anthropicClient == null) {
-            String key = anthropicApiKey != null && !anthropicApiKey.isBlank()
-                    ? anthropicApiKey
-                    : System.getenv("ANTHROPIC_API_KEY");
-            if (key == null || key.isBlank()) {
-                throw new IllegalStateException(
-                        "ANTHROPIC_API_KEY is not configured. Set the environment variable or anthropic.api.key in application.yml.");
-            }
-            anthropicClient = AnthropicOkHttpClient.builder()
-                    .apiKey(key)
-                    .build();
-        }
-        return anthropicClient;
-    }
+    private record OllamaMessage(String role, String content) {}
+    private record OllamaChatRequest(String model, List<OllamaMessage> messages, boolean stream) {}
+    private record OllamaMessageWrapper(String content) {}
+    private record OllamaChatResponse(OllamaMessageWrapper message) {}
 
     public String chat(String mechanicUsername, String userMessage) {
         String systemPrompt = buildSystemPrompt(mechanicUsername);
 
-        MessageCreateParams params = MessageCreateParams.builder()
-                .model("claude-opus-4-8")
-                .maxTokens(1024L)
-                .system(systemPrompt)
-                .addUserMessage(userMessage)
-                .build();
+        List<OllamaMessage> messages = List.of(
+                new OllamaMessage("system", systemPrompt),
+                new OllamaMessage("user", userMessage)
+        );
 
-        Message response = getClient().messages().create(params);
+        OllamaChatRequest request = new OllamaChatRequest(ollamaModel, messages, false);
 
-        return response.content().stream()
-                .flatMap(block -> block.text().stream())
-                .map(textBlock -> textBlock.text())
-                .collect(Collectors.joining("\n"));
+        try {
+            OllamaChatResponse response = RestClient.builder()
+                    .baseUrl(ollamaBaseUrl)
+                    .build()
+                    .post()
+                    .uri("/api/chat")
+                    .body(request)
+                    .retrieve()
+                    .body(OllamaChatResponse.class);
+
+            if (response != null && response.message() != null) {
+                return response.message().content();
+            }
+            return "Je n'ai pas pu générer une réponse. Veuillez réessayer.";
+        } catch (Exception e) {
+            log.error("Ollama request failed: {}", e.getMessage());
+            throw new IllegalStateException(
+                    "Le service de chatbot est indisponible. Assurez-vous qu'Ollama est démarré (ollama serve) et que le modèle '"
+                            + ollamaModel + "' est installé (ollama pull " + ollamaModel + ").");
+        }
     }
 
     private String buildSystemPrompt(String mechanicUsername) {
@@ -98,8 +99,7 @@ public class ChatbotService {
                 .collect(Collectors.joining("\n"));
 
         return String.format("""
-                Tu es un assistant intelligent pour les mécaniciens d'un garage automobile.
-                Tu aides le mécanicien à gérer et consulter ses réparations, véhicules et planning.
+                Tu es un assistant pour les mécaniciens d'un garage automobile.
                 Réponds toujours en français de manière concise et professionnelle.
 
                 === DONNÉES DU MÉCANICIEN ===
@@ -112,14 +112,13 @@ public class ChatbotService {
                   - En cours: %d
                   - Terminées: %d
 
-                === VÉHICULES DANS SES RÉPARATIONS ===
+                === VÉHICULES ===
                 %s
 
                 === RÉPARATIONS EN COURS / PLANIFIÉES ===
                 %s
 
-                Réponds aux questions du mécanicien sur ses véhicules, ses réparations et son planning.
-                Si on te demande des informations que tu n'as pas, dis-le clairement.
+                Réponds uniquement aux questions liées à ses véhicules, réparations et planning.
                 """,
                 mechanicUsername,
                 LocalDate.now(),

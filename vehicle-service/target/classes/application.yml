@@ -51,7 +51,7 @@ kafka:
 
 anthropic:
   api:
-    key: ${ANTHROPIC_API_KEY:}
+    key: ${ANTHROPIC_API_KEY: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}
 
 management:
   endpoints:

@@ -49,9 +49,9 @@ kafka:
     user-registered: user-registered    # consumed from auth-service
     product-low-stock: product-low-stock  # consumed from stock-service
 
-anthropic:
-  api:
-    key: ${ANTHROPIC_API_KEY:REPLACE_WITH_YOUR_KEY}
+ollama:
+  base-url: http://localhost:11434
+  model: llama3.2
 
 management:
   endpoints:
