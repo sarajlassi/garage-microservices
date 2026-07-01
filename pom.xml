@@ -23,5 +23,28 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- JaCoCo -->
+        <jacoco.version>0.8.11</jacoco.version>
+        <coverage.minimum>0.80</coverage.minimum>
+
+        <!-- SonarQube — read by sonar-maven-plugin when run from root -->
+        <sonar.projectKey>garage-microservices</sonar.projectKey>
+        <sonar.projectName>Garage Microservices</sonar.projectName>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.coverage.jacoco.xmlReportPaths>
+            ${project.basedir}/auth-service/target/site/jacoco/jacoco.xml,
+            ${project.basedir}/vehicle-service/target/site/jacoco/jacoco.xml,
+            ${project.basedir}/stock-service/target/site/jacoco/jacoco.xml,
+            ${project.basedir}/invoice-service/target/site/jacoco/jacoco.xml
+        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.exclusions>
+            **/model/**,**/dto/**,**/entity/**,**/config/**,
+            **/exception/**,**/kafka/KafkaEvents.java,**/*Application.java
+        </sonar.exclusions>
+        <sonar.coverage.exclusions>
+            **/model/**,**/dto/**,**/entity/**,**/config/**,
+            **/exception/**,**/kafka/KafkaEvents.java,**/*Application.java
+        </sonar.coverage.exclusions>
     </properties>
 </project>

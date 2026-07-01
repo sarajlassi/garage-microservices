@@ -7,88 +7,98 @@ global:
 alerting:
   alertmanagers:
     - static_configs:
-        - targets:
-            - alertmanager:9093
+        - targets: []   # add alertmanager:9093 when deployed
 
-rule_files:
-  - '/etc/prometheus/alerts/*.yml'
+rule_files: []          # add alert rule files here when needed
 
 scrape_configs:
-  # ========================================
+  # ─────────────────────────────────────────
   # Prometheus self-monitoring
-  # ========================================
-  - job_name: 'prometheus'
+  # ─────────────────────────────────────────
+  - job_name: prometheus
     static_configs:
       - targets: ['localhost:9090']
 
-  # ========================================
-  # Docker containers
-  # ========================================
-  - job_name: 'docker'
-    static_configs:
-      - targets: ['localhost:9323']
-
-  # ========================================
-  # Auth Service
-  # ========================================
-  - job_name: 'auth-service'
-    metrics_path: '/actuator/prometheus'
+  # ─────────────────────────────────────────
+  # Auth Service — Spring Boot Actuator
+  # ─────────────────────────────────────────
+  - job_name: auth-service
+    metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['auth-service:8081']
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'auth-service'
+        replacement: auth-service
 
-  # ========================================
-  # Vehicle Service
-  # ========================================
-  - job_name: 'vehicle-service'
-    metrics_path: '/actuator/prometheus'
+  # ─────────────────────────────────────────
+  # Vehicle Service — Spring Boot Actuator
+  # ─────────────────────────────────────────
+  - job_name: vehicle-service
+    metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['vehicle-service:8082']
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'vehicle-service'
+        replacement: vehicle-service
 
-  # ========================================
-  # Stock Service
-  # ========================================
-  - job_name: 'stock-service'
-    metrics_path: '/actuator/prometheus'
+  # ─────────────────────────────────────────
+  # Stock Service — Spring Boot Actuator
+  # ─────────────────────────────────────────
+  - job_name: stock-service
+    metrics_path: /actuator/prometheus
     static_configs:
       - targets: ['stock-service:8083']
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'stock-service'
+        replacement: stock-service
 
-  # ========================================
-  # PostgreSQL
-  # ========================================
-  - job_name: 'postgres'
+  # ─────────────────────────────────────────
+  # Invoice Service — Spring Boot Actuator
+  # ─────────────────────────────────────────
+  - job_name: invoice-service
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['invoice-service:8084']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: invoice-service
+
+  # ─────────────────────────────────────────
+  # PostgreSQL Exporter
+  # ─────────────────────────────────────────
+  - job_name: postgres
     static_configs:
       - targets: ['postgres-exporter:9187']
 
-  # ========================================
-  # Kafka
-  # ========================================
-  - job_name: 'kafka'
+  # ─────────────────────────────────────────
+  # Kafka Exporter (consumer-group lag, topic metrics)
+  # ─────────────────────────────────────────
+  - job_name: kafka
     static_configs:
-      - targets: ['kafka:9092']
+      - targets: ['kafka-exporter:9308']
 
-  # ========================================
-  # Node Exporter (Linux hosts)
-  # ========================================
-  - job_name: 'node'
+  # ─────────────────────────────────────────
+  # Node Exporter (host OS metrics)
+  # ─────────────────────────────────────────
+  - job_name: node
     static_configs:
       - targets: ['node-exporter:9100']
 
-  # ========================================
-  # cAdvisor (Docker containers metrics)
-  # ========================================
-  - job_name: 'cadvisor'
+  # ─────────────────────────────────────────
+  # cAdvisor (Docker container metrics)
+  # ─────────────────────────────────────────
+  - job_name: cadvisor
     static_configs:
       - targets: ['cadvisor:8080']
 
+  # ─────────────────────────────────────────
+  # Loki (log ingestion metrics)
+  # ─────────────────────────────────────────
+  - job_name: loki
+    static_configs:
+      - targets: ['loki:3100']
+    metrics_path: /metrics

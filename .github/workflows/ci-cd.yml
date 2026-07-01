@@ -13,7 +13,7 @@ env:
 jobs:
 
   # ──────────────────────────────────────────
-  # 1. BUILD
+  # 1. BUILD  (compile + package, no tests)
   # ──────────────────────────────────────────
   build:
     name: Build
@@ -28,7 +28,7 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Maven build
+      - name: Maven build (skip tests)
         run: mvn clean package -DskipTests --batch-mode
 
       - name: Upload JARs
@@ -39,42 +39,14 @@ jobs:
           retention-days: 1
 
   # ──────────────────────────────────────────
-  # 2. QUALITY
-  # ──────────────────────────────────────────
-  quality:
-    name: Code Quality
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: maven
-
-      - name: SonarQube scan
-        if: env.SONAR_TOKEN != ''
-        run: |
-          mvn sonar:sonar \
-            -Dsonar.projectKey=garage-microservices \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-            --batch-mode
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-
-  # ──────────────────────────────────────────
-  # 3. TEST
+  # 2. TEST + COVERAGE GATE
+  #    mvn verify runs: tests → JaCoCo report
+  #    → check (fails build if < 80%)
   # ──────────────────────────────────────────
   test:
-    name: Test
+    name: Test & Coverage
     runs-on: ubuntu-latest
-    needs: quality
+    needs: build
     services:
       postgres:
         image: postgres:15-alpine
@@ -99,12 +71,83 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Run tests
-        run: mvn test --batch-mode
+      - name: Run tests with coverage check
+        # verify phase = test + JaCoCo report + JaCoCo check (80% minimum)
+        # Build FAILS here if any module is below 80% instruction coverage
+        run: mvn verify --batch-mode
         env:
           SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/testdb
           SPRING_DATASOURCE_USERNAME: postgres
           SPRING_DATASOURCE_PASSWORD: postgres
+
+      - name: Publish test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '*/target/surefire-reports/*.xml'
+          retention-days: 7
+
+      - name: Publish JaCoCo reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: '*/target/site/jacoco/'
+          retention-days: 7
+
+  # ──────────────────────────────────────────
+  # 3. SONARQUBE  (runs after tests so it has
+  #    coverage data; waits for Quality Gate)
+  # ──────────────────────────────────────────
+  quality:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history for blame / SCM info
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Restore JaCoCo reports
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-reports
+          path: jacoco-reports
+
+      - name: Rebuild sources for Sonar bytecode analysis
+        # sonar-maven-plugin needs compiled classes; skip tests since we already ran them
+        run: mvn compile test-compile -DskipTests --batch-mode
+
+      - name: SonarQube scan
+        if: ${{ env.SONAR_TOKEN != '' }}
+        run: |
+          mvn sonar:sonar \
+            -Dsonar.projectKey=garage-microservices \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.token=${{ secrets.SONAR_TOKEN }} \
+            -Dsonar.coverage.jacoco.xmlReportPaths=\
+              auth-service/target/site/jacoco/jacoco.xml,\
+              vehicle-service/target/site/jacoco/jacoco.xml,\
+              stock-service/target/site/jacoco/jacoco.xml,\
+              invoice-service/target/site/jacoco/jacoco.xml \
+            -Dsonar.qualitygate.wait=true \
+            --batch-mode
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Skip Sonar (token not configured)
+        if: ${{ env.SONAR_TOKEN == '' }}
+        run: echo "::notice::SONAR_TOKEN secret not set — Sonar scan skipped."
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # ──────────────────────────────────────────
   # 4. DOCKER BUILD & PUSH
@@ -112,7 +155,7 @@ jobs:
   docker-build:
     name: Docker – ${{ matrix.service }}
     runs-on: ubuntu-latest
-    needs: test
+    needs: quality
     if: github.event_name == 'push'
     env:
       DOCKER_USER: ${{ secrets.DOCKER_USERNAME }}

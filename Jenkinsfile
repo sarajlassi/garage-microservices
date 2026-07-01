@@ -23,26 +23,52 @@ pipeline {
 
     stages {
 
+        // ─────────────────────────────────────────
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
 
+        // ─────────────────────────────────────────
         stage('Build') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                sh 'mvn clean package -DskipTests --batch-mode'
             }
         }
 
-        stage('Unit Tests') {
+        // ─────────────────────────────────────────
+        // mvn verify = compile → test → JaCoCo report → JaCoCo check
+        // BUILD FAILS HERE if instruction coverage < 80% in any module
+        // ─────────────────────────────────────────
+        stage('Test & Coverage') {
             steps {
-                sh 'mvn test'
-                junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+                sh 'mvn verify --batch-mode'
+            }
+            post {
+                always {
+                    // Publish JUnit test results
+                    junit allowEmptyResults: true, testResults: '**/target/surefire-reports/*.xml'
+
+                    // Publish JaCoCo coverage report (requires JaCoCo Jenkins plugin)
+                    jacoco(
+                        execPattern:          '**/target/jacoco.exec',
+                        classPattern:         '**/target/classes',
+                        sourcePattern:        '**/src/main/java',
+                        exclusionPattern:     '**/model/**,**/dto/**,**/entity/**,**/config/**,**/*Application.class,**/exception/**',
+                        minimumInstructionCoverage: '80',
+                        changeBuildStatus:    true
+                    )
+                }
             }
         }
 
-        stage('Code Quality') {
+        // ─────────────────────────────────────────
+        // Sonar runs AFTER tests so it has coverage data.
+        // -Dsonar.qualitygate.wait=true blocks until Sonar
+        // evaluates the Quality Gate and fails the stage if it fails.
+        // ─────────────────────────────────────────
+        stage('SonarQube Analysis') {
             when {
                 anyOf { branch 'main'; branch 'develop' }
             }
@@ -51,11 +77,19 @@ pipeline {
                     mvn sonar:sonar \
                         -Dsonar.projectKey=garage-microservices \
                         -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.login=${SONAR_TOKEN}
+                        -Dsonar.token=${SONAR_TOKEN} \
+                        -Dsonar.coverage.jacoco.xmlReportPaths=\
+auth-service/target/site/jacoco/jacoco.xml,\
+vehicle-service/target/site/jacoco/jacoco.xml,\
+stock-service/target/site/jacoco/jacoco.xml,\
+invoice-service/target/site/jacoco/jacoco.xml \
+                        -Dsonar.qualitygate.wait=true \
+                        --batch-mode
                 """
             }
         }
 
+        // ─────────────────────────────────────────
         stage('Build & Push Docker Images') {
             steps {
                 withCredentials([usernamePassword(
@@ -63,15 +97,12 @@ pipeline {
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
+                    sh "echo \$DOCKER_PASS | docker login ${env.REGISTRY} -u \$DOCKER_USER --password-stdin"
 
                     sh """
-                        echo \$DOCKER_PASS | docker login ${env.REGISTRY} -u \$DOCKER_USER --password-stdin
-                    """
-
-                    sh """
-                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} -f auth-service/Dockerfile auth-service/
+                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG}    -f auth-service/Dockerfile    auth-service/
                         docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} -f vehicle-service/Dockerfile vehicle-service/
-                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} -f stock-service/Dockerfile stock-service/
+                        docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG}   -f stock-service/Dockerfile   stock-service/
                         docker build -t ${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} -f invoice-service/Dockerfile invoice-service/
 
                         docker push ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG}
@@ -85,21 +116,19 @@ pipeline {
             }
         }
 
+        // ─────────────────────────────────────────
         stage('Security Scan') {
             steps {
                 sh """
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
-                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} || true
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
-                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} || true
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
-                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} || true
-                    trivy image --exit-code 0 --severity HIGH,CRITICAL \
-                        ${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG}    || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG}   || true
+                    trivy image --exit-code 0 --severity HIGH,CRITICAL ${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} || true
                 """
             }
         }
 
+        // ─────────────────────────────────────────
         stage('Approve Production Deploy') {
             when {
                 expression { params.ENVIRONMENT == 'prod' }
@@ -111,43 +140,33 @@ pipeline {
             }
         }
 
+        // ─────────────────────────────────────────
         stage('Deploy') {
-            when {
-                expression { params.ENVIRONMENT == 'dev' || params.ENVIRONMENT == 'prod' }
-            }
             steps {
                 script {
                     def ns = "garage-${params.ENVIRONMENT}"
-
                     sh """
                         kubectl apply -f k8s/namespaces.yaml
                         kubectl apply -k k8s/${params.ENVIRONMENT}/
 
-                        kubectl set image deployment/auth-service \
-                            auth-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG} -n ${ns}
-
-                        kubectl set image deployment/vehicle-service \
-                            vehicle-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} -n ${ns}
-
-                        kubectl set image deployment/stock-service \
-                            stock-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG} -n ${ns}
-
-                        kubectl set image deployment/invoice-service \
-                            invoice-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} -n ${ns}
+                        kubectl set image deployment/auth-service    auth-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-auth:${params.IMAGE_TAG}    -n ${ns}
+                        kubectl set image deployment/vehicle-service vehicle-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-vehicle:${params.IMAGE_TAG} -n ${ns}
+                        kubectl set image deployment/stock-service   stock-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-stock:${params.IMAGE_TAG}   -n ${ns}
+                        kubectl set image deployment/invoice-service invoice-service=${env.REGISTRY}/${env.IMAGE_PREFIX}-invoice:${params.IMAGE_TAG} -n ${ns}
                     """
                 }
             }
         }
 
+        // ─────────────────────────────────────────
         stage('Health Check') {
             steps {
                 script {
                     def ns = "garage-${params.ENVIRONMENT}"
-
                     sh """
-                        kubectl rollout status deployment/auth-service -n ${ns} --timeout=5m
+                        kubectl rollout status deployment/auth-service    -n ${ns} --timeout=5m
                         kubectl rollout status deployment/vehicle-service -n ${ns} --timeout=5m
-                        kubectl rollout status deployment/stock-service -n ${ns} --timeout=5m
+                        kubectl rollout status deployment/stock-service   -n ${ns} --timeout=5m
                         kubectl rollout status deployment/invoice-service -n ${ns} --timeout=5m
                     """
                 }
