@@ -338,6 +338,7 @@ public class VehicleService {
 
     private VehicleDto.VehicleResponse mapToVehicleResponse(Vehicle v) {
         Client client = v.getClient();
+        int repairCount = v.getId() != null ? serviceRecordRepository.countByVehicleId(v.getId()) : 0;
         return VehicleDto.VehicleResponse.builder()
                 .id(v.getId())
                 .licensePlate(v.getLicensePlate())
@@ -356,6 +357,7 @@ public class VehicleService {
                 .mileage(v.getMileage())
                 .lastServiceDate(v.getLastServiceDate())
                 .notes(v.getNotes())
+                .repairCount(repairCount)
                 .createdAt(v.getCreatedAt())
                 .updatedAt(v.getUpdatedAt())
                 .build();

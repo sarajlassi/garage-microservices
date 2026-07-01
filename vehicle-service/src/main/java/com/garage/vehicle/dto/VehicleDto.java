@@ -83,6 +83,7 @@ public class VehicleDto {
         private Integer mileage;
         private LocalDate lastServiceDate;
         private String notes;
+        private int repairCount;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
     }
