@@ -10,6 +10,7 @@ import java.util.List;
 @Repository
 public interface ServiceRecordRepository extends JpaRepository<ServiceRecord, Long> {
     List<ServiceRecord> findByVehicleId(Long vehicleId);
+    int countByVehicleId(Long vehicleId);
     List<ServiceRecord> findByServiceStatus(ServiceStatus status);
     List<ServiceRecord> findByMechanicId(Long mechanicId);
 
