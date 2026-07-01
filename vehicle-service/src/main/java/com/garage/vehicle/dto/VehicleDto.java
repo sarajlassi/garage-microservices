@@ -142,6 +142,31 @@ public class VehicleDto {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
+    public static class UsedPartDto {
+        private Long id;
+        private Long stockItemId;
+        private String name;
+        private String ref;
+        private Integer quantity;
+        private BigDecimal unitPrice;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AddUsedPartRequest {
+        private Long stockItemId;
+        private String name;
+        private String ref;
+        private Integer quantity;
+        private BigDecimal unitPrice;
+    }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class ServiceRecordResponse {
         private Long id;
         private Long vehicleId;
@@ -158,5 +183,6 @@ public class VehicleDto {
         private Integer mileageAtService;
         private String notes;
         private LocalDateTime createdAt;
+        private java.util.List<UsedPartDto> usedParts;
     }
 }

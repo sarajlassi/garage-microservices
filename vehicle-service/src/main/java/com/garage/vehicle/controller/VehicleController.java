@@ -110,4 +110,12 @@ public class VehicleController {
         vehicleService.deleteServiceRecord(vehicleId, recordId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/services/{recordId}/parts")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
+    public ResponseEntity<VehicleDto.ServiceRecordResponse> addUsedPart(
+            @PathVariable Long recordId,
+            @RequestBody VehicleDto.AddUsedPartRequest request) {
+        return ResponseEntity.ok(vehicleService.addUsedPart(recordId, request));
+    }
 }

@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -363,7 +364,35 @@ public class VehicleService {
                 .build();
     }
 
+    @Transactional
+    public VehicleDto.ServiceRecordResponse addUsedPart(Long recordId, VehicleDto.AddUsedPartRequest request) {
+        ServiceRecord record = serviceRecordRepository.findById(recordId)
+                .orElseThrow(() -> new NoSuchElementException("Service record not found: " + recordId));
+
+        UsedPart part = UsedPart.builder()
+                .serviceRecord(record)
+                .stockItemId(request.getStockItemId())
+                .name(request.getName())
+                .ref(request.getRef())
+                .quantity(request.getQuantity())
+                .unitPrice(request.getUnitPrice())
+                .build();
+
+        record.getUsedParts().add(part);
+        return mapToServiceResponse(serviceRecordRepository.save(record));
+    }
+
     private VehicleDto.ServiceRecordResponse mapToServiceResponse(ServiceRecord r) {
+        List<VehicleDto.UsedPartDto> parts = r.getUsedParts() == null ? List.of() :
+                r.getUsedParts().stream().map(p -> VehicleDto.UsedPartDto.builder()
+                        .id(p.getId())
+                        .stockItemId(p.getStockItemId())
+                        .name(p.getName())
+                        .ref(p.getRef())
+                        .quantity(p.getQuantity())
+                        .unitPrice(p.getUnitPrice())
+                        .build()).collect(Collectors.toList());
+
         return VehicleDto.ServiceRecordResponse.builder()
                 .id(r.getId())
                 .vehicleId(r.getVehicle().getId())
@@ -380,6 +409,7 @@ public class VehicleService {
                 .mileageAtService(r.getMileageAtService())
                 .notes(r.getNotes())
                 .createdAt(r.getCreatedAt())
+                .usedParts(parts)
                 .build();
     }
 }
