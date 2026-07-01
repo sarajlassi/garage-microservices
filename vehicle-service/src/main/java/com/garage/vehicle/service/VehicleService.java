@@ -32,7 +32,7 @@ public class VehicleService {
         if (vehicleRepository.existsByLicensePlate(request.getLicensePlate())) {
             throw new IllegalArgumentException("License plate already registered: " + request.getLicensePlate());
         }
-        if (request.getVin() != null && vehicleRepository.existsByVin(request.getVin())) {
+        if (!request.getVin().isBlank() && vehicleRepository.existsByVin(request.getVin())) {
             throw new IllegalArgumentException("VIN already registered: " + request.getVin());
         }
 
@@ -47,7 +47,7 @@ public class VehicleService {
                 .model(request.getModel())
                 .year(request.getYear())
                 .color(request.getColor())
-                .vin(request.getVin())
+              //  .vin(request.getVin())
                 .client(client)
                 .createdByUsername(username)
                 .status(VehicleStatus.ACTIVE)
