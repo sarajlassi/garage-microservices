@@ -22,6 +22,7 @@ public class ProductDto {
     private Long supplierId;
     private String sku;
     private Boolean active;
+    private Boolean supplierCatalog;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }
