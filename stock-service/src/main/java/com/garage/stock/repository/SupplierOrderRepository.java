@@ -13,5 +13,6 @@ public interface SupplierOrderRepository extends JpaRepository<SupplierOrder, Lo
     List<SupplierOrder> findBySupplier(String supplier);
     List<SupplierOrder> findByExpectedDeliveryDateBetween(LocalDate startDate, LocalDate endDate);
     List<SupplierOrder> findByReferenceNumber(String referenceNumber);
+    List<SupplierOrder> findByMechanicName(String mechanicName);
 }
 

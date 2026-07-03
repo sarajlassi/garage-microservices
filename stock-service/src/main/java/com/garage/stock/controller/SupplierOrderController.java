@@ -27,15 +27,18 @@ public class SupplierOrderController {
             @RequestParam Integer quantity,
             @RequestParam BigDecimal unitPrice,
             @RequestParam String supplier,
+            @RequestParam(required = false) String mechanicName,
+            @RequestParam(required = false) String mechanicPhone,
+            @RequestParam(required = false) String mechanicEmail,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate expectedDeliveryDate) {
-        
-        log.info("Placing order - Product: {}, Quantity: {}, Supplier: {}", productId, quantity, supplier);
-        
+
+        log.info("Placing order - Product: {}, Quantity: {}, Supplier: {}, Mechanic: {}", productId, quantity, supplier, mechanicName);
+
         if (expectedDeliveryDate == null) {
             expectedDeliveryDate = LocalDate.now().plusDays(7);
         }
-        
-        SupplierOrderDto order = supplierOrderService.placeOrder(productId, quantity, unitPrice, supplier, expectedDeliveryDate);
+
+        SupplierOrderDto order = supplierOrderService.placeOrder(productId, quantity, unitPrice, supplier, mechanicName, mechanicPhone, mechanicEmail, expectedDeliveryDate);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 
@@ -66,6 +69,12 @@ public class SupplierOrderController {
         log.info("Fetching pending orders");
         List<SupplierOrderDto> orders = supplierOrderService.getPendingOrders();
         return ResponseEntity.ok(orders);
+    }
+
+    @GetMapping("/mechanic/{mechanicName}")
+    public ResponseEntity<List<SupplierOrderDto>> getOrdersByMechanic(@PathVariable String mechanicName) {
+        log.info("Fetching orders for mechanic: {}", mechanicName);
+        return ResponseEntity.ok(supplierOrderService.getOrdersByMechanic(mechanicName));
     }
 
     @GetMapping("/supplier/{supplier}")

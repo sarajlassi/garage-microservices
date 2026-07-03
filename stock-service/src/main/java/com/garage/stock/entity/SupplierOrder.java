@@ -45,6 +45,15 @@ public class SupplierOrder {
 
     private String notes;
 
+    @Column(name = "mechanic_name")
+    private String mechanicName;
+
+    @Column(name = "mechanic_phone")
+    private String mechanicPhone;
+
+    @Column(name = "mechanic_email")
+    private String mechanicEmail;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

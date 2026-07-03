@@ -245,6 +245,9 @@ public class AuthService {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .role(user.getRole().name())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .phone(user.getPhone())
                 .build();
     }
 

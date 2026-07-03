@@ -28,22 +28,26 @@ public class SupplierOrderService {
     private final StockKafkaProducer kafkaProducer;
 
     @Transactional
-    public SupplierOrderDto placeOrder(Long productId, Integer quantity, BigDecimal unitPrice, 
-                                       String supplier, LocalDate expectedDeliveryDate) {
-        log.info("Placing supplier order - Product: {}, Quantity: {}, Supplier: {}", 
-                productId, quantity, supplier);
-        
+    public SupplierOrderDto placeOrder(Long productId, Integer quantity, BigDecimal unitPrice,
+                                       String supplier, String mechanicName, String mechanicPhone,
+                                       String mechanicEmail, LocalDate expectedDeliveryDate) {
+        log.info("Placing supplier order - Product: {}, Quantity: {}, Supplier: {}, Mechanic: {}",
+                productId, quantity, supplier, mechanicName);
+
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
-        
+
         String referenceNumber = "ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
-        
+
         SupplierOrder order = SupplierOrder.builder()
                 .product(product)
                 .quantity(quantity)
                 .unitPrice(unitPrice)
                 .totalPrice(unitPrice.multiply(BigDecimal.valueOf(quantity)))
                 .supplier(supplier)
+                .mechanicName(mechanicName)
+                .mechanicPhone(mechanicPhone)
+                .mechanicEmail(mechanicEmail)
                 .status(SupplierOrder.OrderStatus.PENDING)
                 .orderDate(LocalDate.now())
                 .expectedDeliveryDate(expectedDeliveryDate)
@@ -125,6 +129,12 @@ public class SupplierOrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<SupplierOrderDto> getOrdersByMechanic(String mechanicName) {
+        return supplierOrderRepository.findByMechanicName(mechanicName).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     public List<SupplierOrderDto> getAllOrders() {
         return supplierOrderRepository.findAll().stream()
                 .map(this::mapToDto)
@@ -141,6 +151,9 @@ public class SupplierOrderService {
                 .unitPrice(order.getUnitPrice())
                 .totalPrice(order.getTotalPrice())
                 .supplier(order.getSupplier())
+                .mechanicName(order.getMechanicName())
+                .mechanicPhone(order.getMechanicPhone())
+                .mechanicEmail(order.getMechanicEmail())
                 .status(order.getStatus().toString())
                 .orderDate(order.getOrderDate())
                 .expectedDeliveryDate(order.getExpectedDeliveryDate())
