@@ -34,7 +34,7 @@ public class CatalogController {
     @GetMapping("/{supplierId}")
     public ResponseEntity<List<CatalogItem>> getCatalogBySupplier(@PathVariable Long supplierId) {
         log.info("Fetching catalog for supplierId {}", supplierId);
-        List<Product> products = productRepository.findBySupplierId(supplierId);
+        List<Product> products = productRepository.findSupplierCatalogBySupplierId(supplierId);
         return ResponseEntity.ok(buildCatalog(products));
     }
 
