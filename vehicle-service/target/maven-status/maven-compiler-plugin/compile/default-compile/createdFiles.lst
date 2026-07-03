@@ -6,6 +6,7 @@ com\garage\vehicle\kafka\KafkaEvents$ServiceScheduledEvent$ServiceScheduledEvent
 com\garage\vehicle\kafka\KafkaEvents$VehicleUpdatedEvent.class
 com\garage\vehicle\dto\ClientDto$UpdateRequest$UpdateRequestBuilder.class
 com\garage\vehicle\entity\VehicleStatus.class
+com\garage\vehicle\dto\VehicleDto$AddUsedPartRequest.class
 com\garage\vehicle\VehicleServiceApplication.class
 com\garage\vehicle\controller\VehicleController.class
 com\garage\vehicle\service\IClientService.class
@@ -13,6 +14,7 @@ com\garage\vehicle\entity\ServiceRecord$ServiceRecordBuilder.class
 com\garage\vehicle\kafka\VehicleKafkaConsumer.class
 com\garage\vehicle\service\ChatbotService.class
 com\garage\vehicle\repository\ClientRepository.class
+com\garage\vehicle\entity\UsedPart.class
 com\garage\vehicle\dto\ChatDto$ChatRequest.class
 com\garage\vehicle\dto\ChatDto$ChatResponse.class
 com\garage\vehicle\service\ChatbotService$OllamaChatResponse.class
@@ -28,6 +30,7 @@ com\garage\vehicle\dto\VehicleDto$CreateServiceRequest.class
 com\garage\vehicle\dto\VehicleDto$ServiceRecordResponse$ServiceRecordResponseBuilder.class
 com\garage\vehicle\kafka\KafkaEvents$VehicleDeletedEvent$VehicleDeletedEventBuilder.class
 com\garage\vehicle\dto\ClientDto$UpdateRequest.class
+com\garage\vehicle\entity\UsedPart$UsedPartBuilder.class
 com\garage\vehicle\dto\ClientDto$ClientResponse.class
 com\garage\vehicle\entity\ServiceType.class
 com\garage\vehicle\dto\ClientDto.class
@@ -38,6 +41,7 @@ com\garage\vehicle\service\ChatbotService$OllamaMessage.class
 com\garage\vehicle\repository\VehicleRepository.class
 com\garage\vehicle\dto\VehicleDto$CreateVehicleRequest$CreateVehicleRequestBuilder.class
 com\garage\vehicle\entity\Client.class
+com\garage\vehicle\dto\VehicleDto$AddUsedPartRequest$AddUsedPartRequestBuilder.class
 com\garage\vehicle\dto\VehicleDto$VehicleResponse$VehicleResponseBuilder.class
 com\garage\vehicle\dto\ClientDto$CreateRequest$CreateRequestBuilder.class
 com\garage\vehicle\dto\VehicleDto$VehicleResponse.class
@@ -58,6 +62,7 @@ com\garage\vehicle\kafka\KafkaEvents$VehicleDeletedEvent.class
 com\garage\vehicle\dto\ClientDto$CreateRequest.class
 com\garage\vehicle\kafka\KafkaEvents$InvoicePaidEvent$InvoicePaidEventBuilder.class
 com\garage\vehicle\dto\VehicleDto$CreateServiceRequest$CreateServiceRequestBuilder.class
+com\garage\vehicle\dto\VehicleDto$UsedPartDto.class
 com\garage\vehicle\dto\ChatDto.class
 com\garage\vehicle\config\SecurityConfig.class
 com\garage\vehicle\dto\VehicleDto$UpdateVehicleRequest$UpdateVehicleRequestBuilder.class
@@ -66,4 +71,5 @@ com\garage\vehicle\config\KafkaConfig.class
 com\garage\vehicle\kafka\KafkaEvents$InvoicePaidEvent.class
 com\garage\vehicle\security\JwtService.class
 com\garage\vehicle\kafka\KafkaEvents$UserRegisteredEvent$UserRegisteredEventBuilder.class
+com\garage\vehicle\dto\VehicleDto$UsedPartDto$UsedPartDtoBuilder.class
 com\garage\vehicle\kafka\KafkaEvents$VehicleCreatedEvent.class

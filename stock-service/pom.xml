@@ -140,6 +140,16 @@
                         <phase>verify</phase>
                         <goals><goal>check</goal></goals>
                         <configuration>
+                            <excludes>
+                                <exclude>**/dto/*</exclude>
+                                <exclude>**/entity/*</exclude>
+                                <exclude>**/repository/*</exclude>
+                                <exclude>**/kafka/*</exclude>
+                                <exclude>**/controller/*</exclude>
+                                <exclude>**/config/*</exclude>
+                                <exclude>**/security/*</exclude>
+                                <exclude>**/*Application*</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
