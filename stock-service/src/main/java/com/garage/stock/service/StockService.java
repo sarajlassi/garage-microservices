@@ -167,11 +167,16 @@ public class StockService {
 
     @Transactional
     public StockDto addOrInitializeStock(Long productId, Integer quantity, String reference) {
-        try {
-            return addStock(productId, quantity, reference);
-        } catch (RuntimeException e) {
-            return initializeStock(productId, quantity, 5, 100);
-        }
+        return stockRepository.findByProductId(productId)
+            .map(stock -> {
+                stock.setQuantity(stock.getQuantity() + quantity);
+                stock.setLastRestockDate(LocalDateTime.now());
+                Stock updated = stockRepository.save(stock);
+                recordStockMovement(updated, StockHistory.StockMovementType.IN, quantity, reference,
+                    "Ajout via livraison commande");
+                return mapToDto(updated);
+            })
+            .orElseGet(() -> initializeStock(productId, quantity, 5, 100));
     }
 
     public List<StockDto> getLowStockItems() {
