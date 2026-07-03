@@ -26,6 +26,7 @@ public class SupplierOrderService {
     private final SupplierOrderRepository supplierOrderRepository;
     private final ProductRepository productRepository;
     private final StockKafkaProducer kafkaProducer;
+    private final StockService stockService;
 
     @Transactional
     public SupplierOrderDto placeOrder(Long productId, Integer quantity, BigDecimal unitPrice,
@@ -75,16 +76,33 @@ public class SupplierOrderService {
     @Transactional
     public SupplierOrderDto updateOrderStatus(Long orderId, SupplierOrder.OrderStatus newStatus) {
         log.info("Updating order status - Order: {}, New Status: {}", orderId, newStatus);
-        
+
         SupplierOrder order = supplierOrderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
-        
+
+        SupplierOrder.OrderStatus previousStatus = order.getStatus();
         order.setStatus(newStatus);
-        
+
         if (newStatus == SupplierOrder.OrderStatus.RECEIVED) {
             order.setActualDeliveryDate(LocalDate.now());
+            // Décrémenter le stock du fournisseur uniquement si on passe à RECEIVED pour la première fois
+            if (previousStatus != SupplierOrder.OrderStatus.RECEIVED) {
+                try {
+                    stockService.removeStock(
+                        order.getProduct().getId(),
+                        order.getQuantity(),
+                        "Livraison commande #" + order.getReferenceNumber(),
+                        null
+                    );
+                    log.info("Stock decremented for product {} by {} units (order delivered)",
+                        order.getProduct().getId(), order.getQuantity());
+                } catch (Exception e) {
+                    log.warn("Could not decrement stock for product {}: {}",
+                        order.getProduct().getId(), e.getMessage());
+                }
+            }
         }
-        
+
         SupplierOrder updated = supplierOrderRepository.save(order);
         return mapToDto(updated);
     }
