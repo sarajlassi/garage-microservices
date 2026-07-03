@@ -32,6 +32,7 @@ public class ProductService {
                 .createdAt(LocalDateTime.now())
                 .active(true)
                 .supplierCatalog(Boolean.TRUE.equals(dto.getSupplierCatalog()))
+                .mechanicId(dto.getMechanicId())
                 .build();
         
         Product saved = productRepository.save(product);
@@ -51,7 +52,13 @@ public class ProductService {
     }
 
     public List<ProductDto> getAllProducts() {
-        return productRepository.findBySupplierCatalogFalseOrSupplierCatalogIsNull().stream()
+        return productRepository.findGarageStock().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public List<ProductDto> getMechanicProducts(Long mechanicId) {
+        return productRepository.findByMechanicId(mechanicId).stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -97,6 +104,7 @@ public class ProductService {
                 .sku(product.getSku())
                 .active(product.getActive())
                 .supplierCatalog(product.getSupplierCatalog())
+                .mechanicId(product.getMechanicId())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();

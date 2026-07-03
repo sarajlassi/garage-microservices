@@ -165,6 +165,15 @@ public class StockService {
         }
     }
 
+    @Transactional
+    public StockDto addOrInitializeStock(Long productId, Integer quantity, String reference) {
+        try {
+            return addStock(productId, quantity, reference);
+        } catch (RuntimeException e) {
+            return initializeStock(productId, quantity, 5, 100);
+        }
+    }
+
     public List<StockDto> getLowStockItems() {
         return stockRepository.findLowStockItems().stream()
                 .map(this::mapToDto)

@@ -27,6 +27,7 @@ public class SupplierOrderController {
             @RequestParam Integer quantity,
             @RequestParam BigDecimal unitPrice,
             @RequestParam String supplier,
+            @RequestParam(required = false) Long mechanicId,
             @RequestParam(required = false) String mechanicName,
             @RequestParam(required = false) String mechanicPhone,
             @RequestParam(required = false) String mechanicEmail,
@@ -38,7 +39,7 @@ public class SupplierOrderController {
             expectedDeliveryDate = LocalDate.now().plusDays(7);
         }
 
-        SupplierOrderDto order = supplierOrderService.placeOrder(productId, quantity, unitPrice, supplier, mechanicName, mechanicPhone, mechanicEmail, expectedDeliveryDate);
+        SupplierOrderDto order = supplierOrderService.placeOrder(productId, quantity, unitPrice, supplier, mechanicId, mechanicName, mechanicPhone, mechanicEmail, expectedDeliveryDate);
         return ResponseEntity.status(HttpStatus.CREATED).body(order);
     }
 

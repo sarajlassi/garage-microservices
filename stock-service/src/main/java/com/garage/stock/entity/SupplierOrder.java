@@ -45,6 +45,9 @@ public class SupplierOrder {
 
     private String notes;
 
+    @Column(name = "mechanic_id")
+    private Long mechanicId;
+
     @Column(name = "mechanic_name")
     private String mechanicName;
 

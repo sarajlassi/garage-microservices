@@ -45,6 +45,12 @@ public class ProductController {
         return ResponseEntity.ok(products);
     }
 
+    @GetMapping("/mechanic/{mechanicId}")
+    public ResponseEntity<List<ProductDto>> getMechanicProducts(@PathVariable Long mechanicId) {
+        log.info("Fetching products for mechanic: {}", mechanicId);
+        return ResponseEntity.ok(productService.getMechanicProducts(mechanicId));
+    }
+
     @GetMapping("/category/{category}")
     public ResponseEntity<List<ProductDto>> getProductsByCategory(@PathVariable String category) {
         log.info("Fetching products by category: {}", category);

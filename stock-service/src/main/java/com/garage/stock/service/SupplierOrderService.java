@@ -30,10 +30,11 @@ public class SupplierOrderService {
 
     @Transactional
     public SupplierOrderDto placeOrder(Long productId, Integer quantity, BigDecimal unitPrice,
-                                       String supplier, String mechanicName, String mechanicPhone,
-                                       String mechanicEmail, LocalDate expectedDeliveryDate) {
-        log.info("Placing supplier order - Product: {}, Quantity: {}, Supplier: {}, Mechanic: {}",
-                productId, quantity, supplier, mechanicName);
+                                       String supplier, Long mechanicId, String mechanicName,
+                                       String mechanicPhone, String mechanicEmail,
+                                       LocalDate expectedDeliveryDate) {
+        log.info("Placing supplier order - Product: {}, Quantity: {}, Supplier: {}, Mechanic: {} (id={})",
+                productId, quantity, supplier, mechanicName, mechanicId);
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found: " + productId));
@@ -46,6 +47,7 @@ public class SupplierOrderService {
                 .unitPrice(unitPrice)
                 .totalPrice(unitPrice.multiply(BigDecimal.valueOf(quantity)))
                 .supplier(supplier)
+                .mechanicId(mechanicId)
                 .mechanicName(mechanicName)
                 .mechanicPhone(mechanicPhone)
                 .mechanicEmail(mechanicEmail)
@@ -83,23 +85,28 @@ public class SupplierOrderService {
         SupplierOrder.OrderStatus previousStatus = order.getStatus();
         order.setStatus(newStatus);
 
-        if (newStatus == SupplierOrder.OrderStatus.RECEIVED) {
+        if (newStatus == SupplierOrder.OrderStatus.RECEIVED
+                && previousStatus != SupplierOrder.OrderStatus.RECEIVED) {
             order.setActualDeliveryDate(LocalDate.now());
-            // Décrémenter le stock du fournisseur uniquement si on passe à RECEIVED pour la première fois
-            if (previousStatus != SupplierOrder.OrderStatus.RECEIVED) {
-                try {
-                    stockService.removeStock(
-                        order.getProduct().getId(),
-                        order.getQuantity(),
-                        "Livraison commande #" + order.getReferenceNumber(),
-                        null
-                    );
-                    log.info("Stock decremented for product {} by {} units (order delivered)",
-                        order.getProduct().getId(), order.getQuantity());
-                } catch (Exception e) {
-                    log.warn("Could not decrement stock for product {}: {}",
-                        order.getProduct().getId(), e.getMessage());
-                }
+
+            // 1. Décrémenter le stock catalogue du fournisseur
+            try {
+                stockService.removeStock(
+                    order.getProduct().getId(),
+                    order.getQuantity(),
+                    "Livraison commande #" + order.getReferenceNumber(),
+                    null
+                );
+                log.info("Supplier stock decremented for product {} by {}",
+                    order.getProduct().getId(), order.getQuantity());
+            } catch (Exception e) {
+                log.warn("Could not decrement supplier stock for product {}: {}",
+                    order.getProduct().getId(), e.getMessage());
+            }
+
+            // 2. Ajouter au stock personnel du mécanicien
+            if (order.getMechanicId() != null) {
+                addToMechanicStock(order);
             }
         }
 
@@ -159,6 +166,37 @@ public class SupplierOrderService {
                 .collect(Collectors.toList());
     }
 
+    private void addToMechanicStock(SupplierOrder order) {
+        Product source = order.getProduct();
+        String mechanicCode = source.getCode() + "-M" + order.getMechanicId();
+
+        Product mechanicProduct = productRepository.findByCodeAndMechanicId(mechanicCode, order.getMechanicId())
+            .orElseGet(() -> {
+                Product p = Product.builder()
+                    .code(mechanicCode)
+                    .name(source.getName())
+                    .description(source.getDescription())
+                    .category(source.getCategory())
+                    .unitPrice(source.getUnitPrice())
+                    .supplier(order.getSupplier())
+                    .supplierId(source.getSupplierId())
+                    .mechanicId(order.getMechanicId())
+                    .active(true)
+                    .supplierCatalog(false)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+                return productRepository.save(p);
+            });
+
+        stockService.addOrInitializeStock(
+            mechanicProduct.getId(),
+            order.getQuantity(),
+            "Commande livrée #" + order.getReferenceNumber()
+        );
+        log.info("Added {} units of {} to mechanic {} stock",
+            order.getQuantity(), source.getName(), order.getMechanicId());
+    }
+
     private SupplierOrderDto mapToDto(SupplierOrder order) {
         return SupplierOrderDto.builder()
                 .id(order.getId())
@@ -169,6 +207,7 @@ public class SupplierOrderService {
                 .unitPrice(order.getUnitPrice())
                 .totalPrice(order.getTotalPrice())
                 .supplier(order.getSupplier())
+                .mechanicId(order.getMechanicId())
                 .mechanicName(order.getMechanicName())
                 .mechanicPhone(order.getMechanicPhone())
                 .mechanicEmail(order.getMechanicEmail())

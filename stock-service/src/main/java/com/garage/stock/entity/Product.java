@@ -43,6 +43,9 @@ public class Product {
     @Column(name = "supplier_catalog", columnDefinition = "BOOLEAN NOT NULL DEFAULT false")
     private Boolean supplierCatalog = false;
 
+    @Column(name = "mechanic_id")
+    private Long mechanicId;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();

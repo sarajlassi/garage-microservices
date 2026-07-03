@@ -28,6 +28,7 @@ public class SupplierOrderDto {
     private LocalDate actualDeliveryDate;
     private String referenceNumber;
     private String notes;
+    private Long mechanicId;
     private String mechanicName;
     private String mechanicPhone;
     private String mechanicEmail;
