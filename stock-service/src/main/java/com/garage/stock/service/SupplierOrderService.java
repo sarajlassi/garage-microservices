@@ -160,6 +160,12 @@ public class SupplierOrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<SupplierOrderDto> getOrdersByMechanicId(Long mechanicId) {
+        return supplierOrderRepository.findByMechanicId(mechanicId).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     public List<SupplierOrderDto> getAllOrders() {
         return supplierOrderRepository.findAll().stream()
                 .map(this::mapToDto)

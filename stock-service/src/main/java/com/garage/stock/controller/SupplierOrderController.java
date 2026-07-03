@@ -78,6 +78,12 @@ public class SupplierOrderController {
         return ResponseEntity.ok(supplierOrderService.getOrdersByMechanic(mechanicName));
     }
 
+    @GetMapping("/mechanic-id/{mechanicId}")
+    public ResponseEntity<List<SupplierOrderDto>> getOrdersByMechanicId(@PathVariable Long mechanicId) {
+        log.info("Fetching orders for mechanic id: {}", mechanicId);
+        return ResponseEntity.ok(supplierOrderService.getOrdersByMechanicId(mechanicId));
+    }
+
     @GetMapping("/supplier/{supplier}")
     public ResponseEntity<List<SupplierOrderDto>> getOrdersBySupplier(@PathVariable String supplier) {
         log.info("Fetching orders from supplier: {}", supplier);
