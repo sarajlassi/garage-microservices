@@ -2,6 +2,8 @@ package com.garage.stock.repository;
 
 import com.garage.stock.entity.SupplierOrder;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.util.List;
@@ -15,5 +17,8 @@ public interface SupplierOrderRepository extends JpaRepository<SupplierOrder, Lo
     List<SupplierOrder> findByReferenceNumber(String referenceNumber);
     List<SupplierOrder> findByMechanicName(String mechanicName);
     List<SupplierOrder> findByMechanicId(Long mechanicId);
+
+    @Query("SELECT o FROM SupplierOrder o WHERE o.product.supplierId = :supplierId")
+    List<SupplierOrder> findByProductSupplierId(@Param("supplierId") Long supplierId);
 }
 

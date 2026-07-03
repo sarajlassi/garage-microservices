@@ -91,6 +91,12 @@ public class SupplierOrderController {
         return ResponseEntity.ok(orders);
     }
 
+    @GetMapping("/supplier-id/{supplierId}")
+    public ResponseEntity<List<SupplierOrderDto>> getOrdersBySupplierId(@PathVariable Long supplierId) {
+        log.info("Fetching orders for supplier id: {}", supplierId);
+        return ResponseEntity.ok(supplierOrderService.getOrdersBySupplierId(supplierId));
+    }
+
     @GetMapping
     public ResponseEntity<List<SupplierOrderDto>> getAllOrders() {
         log.info("Fetching all orders");

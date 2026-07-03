@@ -148,6 +148,12 @@ public class SupplierOrderService {
                 .collect(Collectors.toList());
     }
 
+    public List<SupplierOrderDto> getOrdersBySupplierId(Long supplierId) {
+        return supplierOrderRepository.findByProductSupplierId(supplierId).stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     public List<SupplierOrderDto> getOrdersByExpectedDeliveryDate(LocalDate startDate, LocalDate endDate) {
         return supplierOrderRepository.findByExpectedDeliveryDateBetween(startDate, endDate).stream()
                 .map(this::mapToDto)
