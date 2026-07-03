@@ -20,6 +20,7 @@ C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\v
 C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\repository\ClientRepository.java
 C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\dto\ChatDto.java
 C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\entity\ServiceType.java
+C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\entity\UsedPart.java
 C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\config\KafkaConfig.java
 C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\security\JwtAuthenticationFilter.java
 C:\Users\sjlassi\Desktop\PFA\project\garage-microservices\garage-microservices\vehicle-service\src\main\java\com\garage\vehicle\entity\Vehicle.java

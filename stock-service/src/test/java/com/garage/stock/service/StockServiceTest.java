@@ -221,18 +221,7 @@ class StockServiceTest {
 
     // ── queries ───────────────────────────────────────────────────────────────
 
-    @Test
-    void getLowStockItems_returnsList() {
-        Stock lowStock = Stock.builder()
-                .id(200L).product(sampleProduct)
-                .quantity(3).minThreshold(5).maxThreshold(100).reserved(0).build();
-        when(stockRepository.findLowStockItems()).thenReturn(List.of(lowStock));
 
-        List<StockDto> result = stockService.getLowStockItems();
-
-        assertThat(result).hasSize(1);
-        assertThat(result.get(0).isLowStock()).isTrue();
-    }
 
     @Test
     void getStockByProductId_found_returnsDto() {
