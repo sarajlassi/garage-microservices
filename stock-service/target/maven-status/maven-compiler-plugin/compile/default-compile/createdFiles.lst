@@ -11,6 +11,7 @@ com\garage\stock\repository\StockRepository.class
 com\garage\stock\kafka\KafkaEvents$ProductAddedEvent.class
 com\garage\stock\entity\Product.class
 com\garage\stock\kafka\StockKafkaProducer.class
+com\garage\stock\controller\CatalogController$CatalogItem.class
 com\garage\stock\dto\StockDto$StockDtoBuilder.class
 com\garage\stock\entity\SupplierOrder.class
 com\garage\stock\dto\ProductDto.class
@@ -41,7 +42,9 @@ com\garage\stock\entity\StockHistory$StockHistoryBuilder.class
 com\garage\stock\repository\ProductRepository.class
 com\garage\stock\service\ProductService.class
 com\garage\stock\service\SupplierOrderService.class
+com\garage\stock\controller\CatalogController$CatalogItem$CatalogItemBuilder.class
 com\garage\stock\security\JwtAuthenticationFilter.class
 com\garage\stock\entity\SupplierOrder$SupplierOrderBuilder.class
 com\garage\stock\kafka\KafkaEvents$SupplierOrderPlacedEvent$SupplierOrderPlacedEventBuilder.class
 com\garage\stock\config\GlobalExceptionHandler.class
+com\garage\stock\controller\CatalogController.class
