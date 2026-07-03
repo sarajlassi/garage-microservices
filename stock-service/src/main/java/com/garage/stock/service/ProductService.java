@@ -31,6 +31,7 @@ public class ProductService {
                 .sku(dto.getSku())
                 .createdAt(LocalDateTime.now())
                 .active(true)
+                .supplierCatalog(Boolean.TRUE.equals(dto.getSupplierCatalog()))
                 .build();
         
         Product saved = productRepository.save(product);
@@ -50,7 +51,7 @@ public class ProductService {
     }
 
     public List<ProductDto> getAllProducts() {
-        return productRepository.findAll().stream()
+        return productRepository.findBySupplierCatalogFalseOrSupplierCatalogIsNull().stream()
                 .map(this::mapToDto)
                 .collect(Collectors.toList());
     }
@@ -95,6 +96,7 @@ public class ProductService {
                 .supplierId(product.getSupplierId())
                 .sku(product.getSku())
                 .active(product.getActive())
+                .supplierCatalog(product.getSupplierCatalog())
                 .createdAt(product.getCreatedAt())
                 .updatedAt(product.getUpdatedAt())
                 .build();

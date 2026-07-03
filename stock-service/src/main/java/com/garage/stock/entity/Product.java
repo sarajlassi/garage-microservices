@@ -40,6 +40,9 @@ public class Product {
     @Column(nullable = false)
     private Boolean active = true;
 
+    @Column(name = "supplier_catalog", nullable = false)
+    private Boolean supplierCatalog = false;
+
     @Temporal(TemporalType.TIMESTAMP)
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
