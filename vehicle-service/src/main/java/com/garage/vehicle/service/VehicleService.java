@@ -378,6 +378,7 @@ public class VehicleService {
                 .unitPrice(request.getUnitPrice())
                 .build();
 
+        if (record.getUsedParts() == null) record.setUsedParts(new java.util.ArrayList<>());
         record.getUsedParts().add(part);
         return mapToServiceResponse(serviceRecordRepository.save(record));
     }

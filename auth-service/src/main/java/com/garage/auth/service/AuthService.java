@@ -195,6 +195,12 @@ public class AuthService {
                 .toList();
     }
 
+    public List<AuthDto.UserResponse> getSuppliers() {
+        return userRepository.findByRole(Role.FOURNISSEUR).stream()
+                .map(this::mapToUserResponse)
+                .toList();
+    }
+
     @Transactional
     public AuthDto.UserResponse toggleUser(Long id) {
         User user = userRepository.findById(id)

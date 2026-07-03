@@ -40,7 +40,7 @@ public class Product {
     @Column(nullable = false)
     private Boolean active = true;
 
-    @Column(name = "supplier_catalog", nullable = false)
+    @Column(name = "supplier_catalog", columnDefinition = "BOOLEAN NOT NULL DEFAULT false")
     private Boolean supplierCatalog = false;
 
     @Temporal(TemporalType.TIMESTAMP)

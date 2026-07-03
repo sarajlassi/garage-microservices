@@ -57,6 +57,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.getAllUsers());
     }
 
+    @GetMapping("/users/suppliers")
+    @PreAuthorize("hasAnyRole('ADMIN', 'MECANICIEN')")
+    public ResponseEntity<List<AuthDto.UserResponse>> getSuppliers() {
+        return ResponseEntity.ok(authService.getSuppliers());
+    }
+
     @PatchMapping("/users/{id}/toggle")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<AuthDto.UserResponse> toggleUser(@PathVariable Long id) {
